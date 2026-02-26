@@ -1,2 +1,1 @@
 # MeetNYC
-# MeetNYC
