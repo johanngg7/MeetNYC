@@ -11,6 +11,10 @@ body {
   color: #111;
 }
 
+.site-header {
+  width: 100%;
+}
+
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -18,19 +22,20 @@ body {
   padding: 28px 42px;
 }
 
-.logo {
+.nav-left .brand {
+  text-decoration: none;
   font-size: 38px;
   font-weight: 700;
   color: #ff1f1f;
 }
 
-.nav-links {
+.nav-right {
   display: flex;
   align-items: center;
-  gap: 56px;
+  gap: 40px;
 }
 
-.nav-links a {
+.nav-right a {
   text-decoration: none;
   color: #ff1f1f;
   font-size: 22px;
@@ -46,6 +51,14 @@ body {
   font-size: 20px;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-btn:hover {
+  background: #ff1f1f;
+  color: white;
 }
 
 .hero-wrapper {
@@ -78,6 +91,7 @@ body {
   font-size: 34px;
   margin-bottom: 110px;
 }
+
 
 .search-panel {
   background: #f7f7f7;
@@ -152,6 +166,108 @@ body {
   padding: 8px;
 }
 
+
+.create-event-page {
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.create-event-card {
+  width: 100%;
+  max-width: 600px;
+  background: #f2e7e7;
+  padding: 40px;
+  border-radius: 10px;
+  border: 2px solid #e2dddd;
+}
+
+
+.create-event-card h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  color: #ff1f1f;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.event-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #ff1f1f;
+}
+
+textarea {
+  resize: none;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #888;
+  text-align: right;
+  margin-top: 4px;
+}
+
+.time-row {
+  display: flex;
+  gap: 16px;
+}
+
+.time-row .form-group {
+  flex: 1;
+}
+
+.form-actions {
+  margin-top: 20px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: #ff1f1f;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #d91c1c;
+}
+
+
 @media (max-width: 1100px) {
   .hero-title {
     font-size: 48px;
@@ -203,4 +319,44 @@ body {
   .dropdown {
     width: 100%;
   }
+
+  .time-row {
+    flex-direction: column;
+  }
+
+  .create-event-card {
+    padding: 25px;
+  }
+}
+.signin-link {
+  color: #ff1f1f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.signin-link:hover {
+  text-decoration: underline;
+}
+.signup-link {
+  color: #ff1f1f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  padding: 16px 40px;
+}
+
+.footer-content {
+  text-align: left;
+  font-size: 14px;
+  color: #555;
+}
+
+.footer-content p {
+  margin: 2px 0;
 }
