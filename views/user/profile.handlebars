@@ -23,9 +23,9 @@
     <div class="profile-section">
       <h2>Events Attending</h2>
 
-      {{#if attendedEvents.length}}
+      {{#if rsvpedEvents.length}}
         <div class="event-grid">
-          {{#each attendedEvents}}
+          {{#each rvspedEvents}}
             {{> eventCard}}
           {{/each}}
         </div>
