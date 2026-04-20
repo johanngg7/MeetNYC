@@ -608,3 +608,44 @@ textarea {
   font-weight: 700;
   margin: 20px 0 30px;
 }
+
+.profile-page {
+  display: flex;
+  justify-content: center;
+  padding: 50px 20px;
+}
+
+.profile-container {
+  width: 96%;
+  max-width: 1200px;
+}
+
+.profile-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.profile-header h1 {
+  font-size: 42px;
+  color: #ff1f1f;
+}
+
+.profile-subtitle {
+  color: #666;
+  margin-top: 10px;
+}
+
+.profile-section {
+  margin-bottom: 50px;
+}
+
+.profile-section h2 {
+  font-size: 26px;
+  color:#ff1f1f;
+  margin-bottom: 20px;
+}
+
+.empty-text {
+  color: #888;
+  font-style: italic;
+}
