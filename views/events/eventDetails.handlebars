@@ -100,7 +100,7 @@
       <div class="comment-list">
         {{#each event.comments}}
           <div class="comment-card">
-            <p><strong>{{this.user}}</strong></p>
+            <p><strong>{{this.userName}}</strong></p>
             <p>{{this.text}}</p>
 
             {{#if ../isAdmin}}
@@ -148,7 +148,7 @@
       <div class="review-list">
         {{#each event.reviews}}
           <div class="review-card">
-            <p><strong>{{this.user}}</strong> - {{this.rating}}/5</p>
+            <p><strong>{{this.userName}}</strong> - {{this.rating}}/5</p>
             <p>{{this.text}}</p>
 
             {{#if ../isAdmin}}
