@@ -1,0 +1,42 @@
+<section class="section-block">
+  <h1>Admin Dashboard</h1>
+
+  <div class="details-content-card">
+    <h2>Flagged Events</h2>
+
+    {{#if flaggedEvents.length}}
+      {{#each flaggedEvents}}
+        <div class="admin-item">
+          <p><strong>{{title}}</strong></p>
+
+          <div class="admin-actions">
+            <button class="secondary-btn" type="button">Review</button>
+            <button class="danger-btn" type="button">Remove</button>
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <p class="empty-text">No flagged events 🎉</p>
+    {{/if}}
+  </div>
+
+  <div class="details-content-card">
+    <h2>Flagged Comments</h2>
+
+    {{#if flaggedComments.length}}
+      {{#each flaggedComments}}
+        <div class="admin-item">
+          <p>{{text}}</p>
+
+          <div class="admin-actions">
+            <button class="secondary-btn" type="button">Keep</button>
+            <button class="danger-btn" type="button">Delete</button>
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <p class="empty-text">No flagged comments 🎉</p>
+    {{/if}}
+  </div>
+
+</section>
