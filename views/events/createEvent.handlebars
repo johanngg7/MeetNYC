@@ -4,6 +4,19 @@
     <p class="subtitle">Share something happening in NYC</p>
 
     <form action="/events/create" method="POST" class="event-form">
+
+    <div class="form-group">
+        <label for="title">Event Title *</label>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          required
+          maxlength="100"
+          placeholder="e.g. Yoga in Central Park"
+        >
+      </div>
+
       <div class="form-group">
         <label for="borough">Borough *</label>
         <select id="borough" name="borough" required>
@@ -14,6 +27,18 @@
           <option value="Bronx">Bronx</option>
           <option value="Staten Island">Staten Island</option>
         </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Location *</label>
+        <input
+          id="location"
+          name="location"
+          type="text"
+          required
+          maxlength="100"
+          placeholder="e.g. Central Park, NYC"
+        >
       </div>
 
       <div class="form-group">
