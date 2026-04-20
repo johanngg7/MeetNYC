@@ -1,0 +1,38 @@
+<section class="profile-page">
+  <div class="profile-container">
+
+    <div class="profile-header">
+      <h1>{{user.firstName}}</h1>
+      <p class="profile-subtitle">Activitis on MeetNYC</p>
+    </div>
+
+    <div class="profile-section">
+      <h2>Events Created</h2>
+
+      {{#if createdEvents.length}}
+        <div class="event-grid">
+          {{#each createdEvents}}
+            {{> eventCard}}
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="empty-text">Haven't created any events yet.</p>
+      {{/if}}
+    </div>
+
+    <div class="profile-section">
+      <h2>Events Attending</h2>
+
+      {{#if attendedEvents.length}}
+        <div class="event-grid">
+          {{#each attendedEvents}}
+            {{> eventCard}}
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="empty-text">Haven't RSVP'd to any events yet.</p>
+      {{/if}}
+    </div>
+
+  </div>
+</section>
