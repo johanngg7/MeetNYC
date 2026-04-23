@@ -4,6 +4,7 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const path = require("path");
 const { connectDB, mongoUrl } = require("./config/mongoConnection");
+const configRoutes = require("./routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,10 +48,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Temporary home route (will move to routes/ in next commit)
-app.get("/", (req, res) => {
-  res.render("home", { title: "MeetNYC" });
-});
+// Routes
+configRoutes(app);
 
 // Start server
 const start = async () => {
