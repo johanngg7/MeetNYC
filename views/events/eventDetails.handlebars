@@ -1,0 +1,166 @@
+<div class="event-details-page">
+  <div class="event-details-card">
+
+    <div class="event-main">
+      {{#if event.image}}
+        <img src="{{event.image}}" alt="{{event.title}}" class="event-details-image">
+      {{/if}}
+
+      <h1>{{event.title}}</h1>
+      <p class="subtitle">Discover and join this NYC event</p>
+
+      <div class="event-info">
+        <p><strong>Category:</strong> {{event.category}}</p>
+        <p><strong>Borough:</strong> {{event.borough}}</p>
+        <p><strong>Date:</strong> {{event.date}}</p>
+        <p><strong>Start Time:</strong> {{event.startTime}}</p>
+        <p><strong>End Time:</strong> {{event.endTime}}</p>
+
+        {{#if event.description}}
+          <p><strong>Description:</strong> {{event.description}}</p>
+        {{/if}}
+
+        {{#if event.creator}}
+          <p><strong>Created by:</strong> {{event.creator}}</p>
+        {{/if}}
+      </div>
+    </div>
+
+    <div class="event-side-panel">
+      <h2>Event Actions</h2>
+
+      <p><strong>Attending:</strong> {{event.attendees.length}}</p>
+
+      {{#if event.capacity}}
+        <p><strong>Capacity:</strong> {{event.capacity}}</p>
+      {{/if}}
+
+      {{#if event.spotsLeft}}
+        <p><strong>Spots Left:</strong> {{event.spotsLeft}}</p>
+      {{/if}}
+
+      {{#if event.averageRating}}
+        <p><strong>Average Rating:</strong> {{event.averageRating}} / 5</p>
+      {{/if}}
+
+      {{#if isLoggedIn}}
+        <form action="/events/{{event._id}}/rsvp" method="POST" class="event-form">
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">RSVP</button>
+          </div>
+        </form>
+
+        <form action="/events/{{event._id}}/save" method="POST" class="event-form">
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Event</button>
+          </div>
+        </form>
+      {{/if}}
+
+      {{#if isOwner}}
+        <div class="form-actions">
+          <a href="/events/{{event._id}}/edit" class="btn-primary btn-link">Edit Event</a>
+        </div>
+
+        <form action="/events/{{event._id}}/delete" method="POST" class="event-form">
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Delete Event</button>
+          </div>
+        </form>
+      {{/if}}
+
+      {{#if isAdmin}}
+        <form action="/events/{{event._id}}/flag" method="POST" class="event-form">
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Admin Remove / Flag</button>
+          </div>
+        </form>
+      {{/if}}
+    </div>
+
+  </div>
+
+  <div class="event-comments-card">
+    <h2>Comments</h2>
+
+    {{#if isLoggedIn}}
+      <form action="/events/{{event._id}}/comments" method="POST" class="event-form">
+        <div class="form-group">
+          <label for="comment">Leave a Comment</label>
+          <textarea id="comment" name="comment" rows="4" placeholder="Write your comment here..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Post Comment</button>
+        </div>
+      </form>
+    {{/if}}
+
+    {{#if event.comments.length}}
+      <div class="comment-list">
+        {{#each event.comments}}
+          <div class="comment-card">
+            <p><strong>{{this.userName}}</strong></p>
+            <p>{{this.text}}</p>
+
+            {{#if ../isAdmin}}
+              <form action="/events/{{../event._id}}/comments/{{this._id}}/delete" method="POST">
+                <button type="submit" class="btn-primary">Remove Comment</button>
+              </form>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p>No comments yet.</p>
+    {{/if}}
+  </div>
+
+  <div class="event-reviews-card">
+    <h2>Reviews</h2>
+
+    {{#if isLoggedIn}}
+      <form action="/events/{{event._id}}/reviews" method="POST" class="event-form">
+        <div class="form-group">
+          <label for="rating">Rating</label>
+          <select id="rating" name="rating" required>
+            <option value="">Select rating</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="review">Review</label>
+          <textarea id="review" name="review" rows="4" placeholder="Write your review here..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Submit Review</button>
+        </div>
+      </form>
+    {{/if}}
+
+    {{#if event.reviews.length}}
+      <div class="review-list">
+        {{#each event.reviews}}
+          <div class="review-card">
+            <p><strong>{{this.userName}}</strong> - {{this.rating}}/5</p>
+            <p>{{this.text}}</p>
+
+            {{#if ../isAdmin}}
+              <form action="/events/{{../event._id}}/reviews/{{this._id}}/delete" method="POST">
+                <button type="submit" class="btn-primary">Remove Review</button>
+              </form>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p>No reviews yet.</p>
+    {{/if}}
+  </div>
+</div>

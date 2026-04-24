@@ -1,0 +1,35 @@
+<div class="create-event-page">
+  <div class="create-event-card">
+
+    <h1>Sign In</h1>
+    <p class="subtitle">Welcome back to Meet NYC</p>
+
+    {{#if error}}
+      <p id="error" style="color: red; margin-bottom: 15px;">{{error}}</p>
+    {{/if}}
+
+    <form id="signin-form" action="/signin" method="POST" class="event-form">
+
+      <div class="form-group">
+        <label for="handle">Handle *</label>
+        <input type="text" id="handle" name="handle" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password *</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Sign In</button>
+      </div>
+
+    </form>
+
+    <p style="margin-top: 20px;">
+      Don’t have an account?
+      <a href="/register" class="signup-link">Sign up</a>
+    </p>
+
+  </div>
+</div>
