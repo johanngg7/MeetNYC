@@ -1,0 +1,13 @@
+<div class="search-results-header">
+  <h1>Search Results</h1>
+</div>
+
+{{#if events.length}}
+  <div class="event-grid">
+    {{#each events}}
+      {{> eventCard}}
+    {{/each}}
+  </div>
+{{else}}
+  <p>No events found.</p>
+{{/if}}

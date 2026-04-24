@@ -1,0 +1,87 @@
+<article class="event-card" data-id="{{_id}}">
+  <div class="event-image-wrap">
+    {{#if image}}
+      <img
+        src="{{image}}"
+        alt="{{title}}"
+        class="event-image"
+        onerror="this.onerror=null;this.src='https://azure-na-images.contentstack.com/v3/assets/blt738d1897c3c93fa6/bltfa5d0fb785639f6f/685040c8f7cdb0fdfa0e6392/MG_1_1_New_York_City_1.webp';"
+      >
+    {{else}}
+      {{#if (eq borough 'Manhattan')}}
+        <img
+          src="https://www.civitatis.com/f/estados-unidos/nueva-york/free-tour-midtown-manhattan-589x392.jpg"
+          alt="{{title}}"
+          class="event-image"
+        >
+      {{else}}
+        {{#if (eq borough 'Brooklyn')}}
+          <img
+            src="https://thumbs.6sqft.com/wp-content/uploads/2022/06/23011308/View_of_Manhattan_Bridge_from_Washington_Street_in_DUMBO_Brooklyn.jpg?w=1560&format=webp"
+            alt="{{title}}"
+            class="event-image"
+          >
+        {{else}}
+          {{#if (eq borough 'Queens')}}
+            <img
+              src="https://blog.urbanadventures.com/wp-content/uploads/2018/07/resize-LIC-Julienne-Schaer_08-copy-2-e1532552058540.jpg"
+              alt="{{title}}"
+              class="event-image"
+            >
+          {{else}}
+            {{#if (eq borough 'Bronx')}}
+              <img
+                src="https://www.nyctourism.com/_next/image/?url=https%3A%2F%2Fimages.ctfassets.net%2F1aemqu6a6t65%2F6ENKHSdVNw35xoA4YncFzz%2Fa64951cf51cf5acd9d68fe0f00cd9f7d%2FArthur_Avenue_Bronx_NYC_Photo_Lucia_Vazquez-201.jpg%3Fh%3D1280%26w%3D1920%26fit%3Dfill%26f%3Dcenter%26q%3D75%26fm%3Dwebp&w=3840&q=75"
+                alt="{{title}}"
+                class="event-image"
+              >
+            {{else}}
+              {{#if (eq borough 'Staten Island')}}
+                <img
+                  src="https://www.civitatis.com/f/estados-unidos/nueva-york/guia/staten-island-m.jpg"
+                  alt="{{title}}"
+                  class="event-image"
+                >
+              {{else}}
+                <img
+                  src="https://azure-na-images.contentstack.com/v3/assets/blt738d1897c3c93fa6/bltfa5d0fb785639f6f/685040c8f7cdb0fdfa0e6392/MG_1_1_New_York_City_1.webp"
+                  alt="{{title}}"
+                  class="event-image"
+                >
+              {{/if}}
+            {{/if}}
+          {{/if}}
+        {{/if}}
+      {{/if}}
+    {{/if}}
+
+    <span class="badge">{{borough}}</span>
+  </div>
+
+  <div class="event-card-body">
+    <h3 class="event-title">{{title}}</h3>
+    <p class="event-meta">{{category}} • {{date}}</p>
+
+    {{#if location}}
+      <p class="event-location">{{location}}</p>
+    {{/if}}
+
+    {{#if spotsLeft}}
+      <p class="spots-left">{{spotsLeft}} spots left</p>
+    {{else}}
+      <p class="spots-left full">No spots left</p>
+    {{/if}}
+
+    <div class="event-card-actions">
+      <a href="/events/{{_id}}" class="primary-btn">View</a>
+
+      {{#if ../isLoggedIn}}
+        <button class="secondary-btn save-btn" type="button" data-id="{{_id}}">
+          ♡ Save
+        </button>
+      {{else}}
+        <a href="/login" class="secondary-btn">♡ Save</a>
+      {{/if}}
+    </div>
+  </div>
+</article>
