@@ -3,7 +3,7 @@ const { engine } = require("express-handlebars");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const path = require("path");
-const { connectDB, mongoUrl } = require("./config/mongoConnection");
+const { dbConnection, mongoUrl } = require("./config/mongoConnection");
 const configRoutes = require("./routes");
 
 const app = express();
@@ -53,7 +53,8 @@ configRoutes(app);
 
 // Start server
 const start = async () => {
-  await connectDB();
+  await dbConnection();
+  console.log("MongoDB connected");
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

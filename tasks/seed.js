@@ -1,14 +1,11 @@
-const { connectDB } = require("../config/mongoConnection");
-const mongoose = require("mongoose");
+const { dbConnection, closeConnection } = require("../config/mongoConnection");
 
 const seed = async () => {
-  await connectDB();
+  await dbConnection();
   console.log("Seeding database...");
 
-  // TODO: Add seed data here
-
   console.log("Done seeding.");
-  await mongoose.connection.close();
+  await closeConnection();
 };
 
 seed();
