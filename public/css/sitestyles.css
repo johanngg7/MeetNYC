@@ -151,6 +151,18 @@ body {
   background: #d8d3d3;
 }
 
+.dropdown-menu div.selected {
+  background: #ffd5d5;
+  color: #ff1f1f;
+}
+
+.search-btn {
+  align-self: center;
+  padding: 14px 32px;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
 .date-picker-row {
   padding: 12px 16px;
 }
