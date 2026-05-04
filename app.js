@@ -43,7 +43,7 @@ app.use(
 // Make session data available to templates
 app.use((req, res, next) => {
   res.locals.isLoggedIn = !!req.session.user;
-  res.locals.isAdmin = req.session.user?.role === "admin";
+  res.locals.isAdmin = req.session.user?.isAdmin === true;
   res.locals.user = req.session.user || null;
   next();
 });
