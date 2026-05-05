@@ -128,4 +128,71 @@ router.post("/:id/rsvp", ensureAuthenticated, async (req, res) => {
   }
 });
 
+router.post("/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const name = req.session.user.firstName + " " + req.session.user.lastName;
+    const cm = await eventData.addComment(
+      req.params.id,
+      req.session.user._id,
+      name,
+      req.body.comment
+    );
+    res.json({ comment: { ...cm, _id: cm._id.toString(), userId: cm.userId.toString() } });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post("/:id/comments/:cid/delete", ensureAuthenticated, async (req, res) => {
+  try {
+    await eventData.removeComment(
+      req.params.id,
+      req.params.cid,
+      req.session.user._id,
+      !!req.session.user.isAdmin
+    );
+    res.json({ deleted: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post("/:id/reviews", ensureAuthenticated, async (req, res) => {
+  try {
+    const name = req.session.user.firstName + " " + req.session.user.lastName;
+    const out = await eventData.addReview(
+      req.params.id,
+      req.session.user._id,
+      name,
+      req.body.rating,
+      req.body.review
+    );
+    res.json({
+      review: {
+        ...out.review,
+        _id: out.review._id.toString(),
+        userId: out.review.userId.toString(),
+      },
+      averageRating: out.averageRating,
+      count: out.count,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post("/:id/reviews/:rid/delete", ensureAuthenticated, async (req, res) => {
+  try {
+    const out = await eventData.removeReview(
+      req.params.id,
+      req.params.rid,
+      req.session.user._id,
+      !!req.session.user.isAdmin
+    );
+    res.json({ deleted: true, averageRating: out.averageRating, count: out.count });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 module.exports = router;
