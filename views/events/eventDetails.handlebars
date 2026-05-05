@@ -31,9 +31,7 @@
 
       <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span></p>
 
-      {{#if event.averageRating}}
-        <p><strong>Average Rating:</strong> {{event.averageRating}} / 5</p>
-      {{/if}}
+      <p><strong>Average Rating:</strong> <span id="averageRating">{{#if event.averageRating}}{{event.averageRating}} / 5{{else}}No reviews{{/if}}</span></p>
 
       {{#if isLoggedIn}}
         <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}">
@@ -79,7 +77,7 @@
     <h2>Comments</h2>
 
     {{#if isLoggedIn}}
-      <form action="/events/{{event._id}}/comments" method="POST" class="event-form">
+      <form id="commentForm" action="/events/{{event._id}}/comments" method="POST" class="event-form" data-id="{{event._id}}">
         <div class="form-group">
           <label for="comment">Leave a Comment</label>
           <textarea id="comment" name="comment" rows="4" placeholder="Write your comment here..."></textarea>
@@ -88,34 +86,32 @@
         <div class="form-actions">
           <button type="submit" class="btn-primary">Post Comment</button>
         </div>
+        <p id="commentMsg" class="form-msg"></p>
       </form>
     {{/if}}
 
-    {{#if event.comments.length}}
-      <div class="comment-list">
-        {{#each event.comments}}
-          <div class="comment-card">
-            <p><strong>{{this.userName}}</strong></p>
-            <p>{{this.text}}</p>
+    <div id="commentList" class="comment-list">
+      {{#each event.comments}}
+        <div class="comment-card" data-id="{{this._id}}">
+          <p><strong>{{this.userName}}</strong></p>
+          <p>{{this.text}}</p>
 
-            {{#if ../isAdmin}}
-              <form action="/events/{{../event._id}}/comments/{{this._id}}/delete" method="POST">
-                <button type="submit" class="btn-primary">Remove Comment</button>
-              </form>
-            {{/if}}
-          </div>
-        {{/each}}
-      </div>
-    {{else}}
-      <p>No comments yet.</p>
-    {{/if}}
+          {{#if ../isAdmin}}
+            <button type="button" class="btn-primary delete-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Remove Comment</button>
+          {{/if}}
+        </div>
+      {{/each}}
+    </div>
+    {{#unless event.comments.length}}
+      <p id="commentEmpty">No comments yet.</p>
+    {{/unless}}
   </div>
 
   <div class="event-reviews-card">
     <h2>Reviews</h2>
 
     {{#if isLoggedIn}}
-      <form action="/events/{{event._id}}/reviews" method="POST" class="event-form">
+      <form id="reviewForm" action="/events/{{event._id}}/reviews" method="POST" class="event-form" data-id="{{event._id}}">
         <div class="form-group">
           <label for="rating">Rating</label>
           <select id="rating" name="rating" required>
@@ -136,26 +132,24 @@
         <div class="form-actions">
           <button type="submit" class="btn-primary">Submit Review</button>
         </div>
+        <p id="reviewMsg" class="form-msg"></p>
       </form>
     {{/if}}
 
-    {{#if event.reviews.length}}
-      <div class="review-list">
-        {{#each event.reviews}}
-          <div class="review-card">
-            <p><strong>{{this.userName}}</strong> - {{this.rating}}/5</p>
-            <p>{{this.text}}</p>
+    <div id="reviewList" class="review-list">
+      {{#each event.reviews}}
+        <div class="review-card" data-id="{{this._id}}">
+          <p><strong>{{this.userName}}</strong> - {{this.rating}}/5</p>
+          <p>{{this.text}}</p>
 
-            {{#if ../isAdmin}}
-              <form action="/events/{{../event._id}}/reviews/{{this._id}}/delete" method="POST">
-                <button type="submit" class="btn-primary">Remove Review</button>
-              </form>
-            {{/if}}
-          </div>
-        {{/each}}
-      </div>
-    {{else}}
-      <p>No reviews yet.</p>
-    {{/if}}
+          {{#if ../isAdmin}}
+            <button type="button" class="btn-primary delete-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Remove Review</button>
+          {{/if}}
+        </div>
+      {{/each}}
+    </div>
+    {{#unless event.reviews.length}}
+      <p id="reviewEmpty">No reviews yet.</p>
+    {{/unless}}
   </div>
 </div>
