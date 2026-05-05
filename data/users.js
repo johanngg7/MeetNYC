@@ -15,9 +15,9 @@ const create = async (firstName, lastName, email, handle, password, borough) => 
 
   const col = await users();
   const dupEmail = await col.findOne({ email: em });
-  if (dupEmail) throw new Error("email already used");
+  if (dupEmail) throw new Error("Email already used");
   const dupHandle = await col.findOne({ handle: hd });
-  if (dupHandle) throw new Error("handle already used");
+  if (dupHandle) throw new Error("Handle already used");
 
   const hash = await bcrypt.hash(password, SALT);
   const doc = {
@@ -36,7 +36,7 @@ const create = async (firstName, lastName, email, handle, password, borough) => 
     createdAt: new Date(),
   };
   const r = await col.insertOne(doc);
-  if (!r.acknowledged) throw new Error("failed to create user");
+  if (!r.acknowledged) throw new Error("Failed to create user");
   doc._id = r.insertedId;
   delete doc.hashedPassword;
   return doc;
@@ -55,7 +55,7 @@ const getById = async (id) => {
     { _id: new ObjectId(ok) },
     { projection: { hashedPassword: 0 } }
   );
-  if (!u) throw new Error("user not found");
+  if (!u) throw new Error("User not found");
   return u;
 };
 
@@ -79,13 +79,13 @@ const getByHandle = async (handle) => {
 const verify = async (email, password) => {
   const em = v.isEmail(email);
   if (typeof password !== "string" || !password) {
-    throw new Error("password required");
+    throw new Error("Password required");
   }
   const col = await users();
   const u = await col.findOne({ email: em });
-  if (!u) throw new Error("invalid email or password");
+  if (!u) throw new Error("Invalid email or password");
   const ok = await bcrypt.compare(password, u.hashedPassword);
-  if (!ok) throw new Error("invalid email or password");
+  if (!ok) throw new Error("Invalid email or password");
   delete u.hashedPassword;
   return u;
 };
@@ -103,26 +103,26 @@ const lists = ["createdEvents", "rsvpedEvents", "savedEvents"];
 const addEventTo = async (userId, listName, eventId) => {
   const uid = v.isId(userId);
   const eid = v.isId(eventId);
-  if (!lists.includes(listName)) throw new Error("invalid list name");
+  if (!lists.includes(listName)) throw new Error("Invalid list name");
   const col = await users();
   const r = await col.updateOne(
     { _id: new ObjectId(uid) },
     { $addToSet: { [listName]: new ObjectId(eid) } }
   );
-  if (r.matchedCount === 0) throw new Error("user not found");
+  if (r.matchedCount === 0) throw new Error("User not found");
   return true;
 };
 
 const removeEventFrom = async (userId, listName, eventId) => {
   const uid = v.isId(userId);
   const eid = v.isId(eventId);
-  if (!lists.includes(listName)) throw new Error("invalid list name");
+  if (!lists.includes(listName)) throw new Error("Invalid list name");
   const col = await users();
   const r = await col.updateOne(
     { _id: new ObjectId(uid) },
     { $pull: { [listName]: new ObjectId(eid) } }
   );
-  if (r.matchedCount === 0) throw new Error("user not found");
+  if (r.matchedCount === 0) throw new Error("User not found");
   return true;
 };
 
