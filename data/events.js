@@ -66,6 +66,11 @@ const getById = async (id) => {
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(ok) });
   if (!ev) throw new Error("event not found");
+  if (ev.reviews && ev.reviews.length > 0) {
+    let sum = 0;
+    for (const r of ev.reviews) sum += Number(r.rating) || 0;
+    ev.averageRating = (sum / ev.reviews.length).toFixed(1);
+  }
   return ev;
 };
 
@@ -188,6 +193,117 @@ const removeAttendee = async (eventId, userId) => {
   return true;
 };
 
+const addComment = async (eventId, userId, userName, text) => {
+  const eid = v.isId(eventId);
+  const uid = v.isId(userId);
+  const name = v.isStr(userName, "userName");
+  const t = v.isLen(text, "comment", 3, 500);
+
+  const col = await events();
+  const cm = {
+    _id: new ObjectId(),
+    userId: new ObjectId(uid),
+    userName: v.clean(name),
+    text: v.clean(t),
+    postedAt: new Date(),
+  };
+  const r = await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $push: { comments: cm } }
+  );
+  if (r.matchedCount === 0) throw new Error("event not found");
+  return cm;
+};
+
+const removeComment = async (eventId, commentId, userId, isAdmin) => {
+  const eid = v.isId(eventId);
+  const cid = v.isId(commentId);
+  const uid = v.isId(userId);
+
+  const col = await events();
+  const ev = await col.findOne({ _id: new ObjectId(eid) });
+  if (!ev) throw new Error("event not found");
+
+  const cm = (ev.comments || []).find((c) => c._id.toString() === cid);
+  if (!cm) throw new Error("comment not found");
+  if (!isAdmin && cm.userId.toString() !== uid) throw new Error("not your comment");
+
+  await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $pull: { comments: { _id: new ObjectId(cid) } } }
+  );
+  return true;
+};
+
+const addReview = async (eventId, userId, userName, rating, text) => {
+  const eid = v.isId(eventId);
+  const uid = v.isId(userId);
+  const name = v.isStr(userName, "userName");
+
+  const r = parseInt(rating, 10);
+  if (isNaN(r) || r < 1 || r > 5) throw new Error("rating must be 1-5");
+
+  let cleanText = "";
+  if (text && typeof text === "string" && text.trim()) {
+    cleanText = v.isLen(text, "review", 10, 500);
+  }
+
+  const col = await events();
+  const ev = await col.findOne({ _id: new ObjectId(eid) });
+  if (!ev) throw new Error("event not found");
+
+  const exists = (ev.reviews || []).some((rv) => rv.userId.toString() === uid);
+  if (exists) throw new Error("you already reviewed this event");
+
+  const review = {
+    _id: new ObjectId(),
+    userId: new ObjectId(uid),
+    userName: v.clean(name),
+    rating: r,
+    text: v.clean(cleanText),
+    postedAt: new Date(),
+  };
+  await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $push: { reviews: review } }
+  );
+
+  const after = await col.findOne({ _id: new ObjectId(eid) });
+  let sum = 0;
+  for (const x of after.reviews) sum += Number(x.rating) || 0;
+  const avg = (sum / after.reviews.length).toFixed(1);
+
+  return { review, averageRating: avg, count: after.reviews.length };
+};
+
+const removeReview = async (eventId, reviewId, userId, isAdmin) => {
+  const eid = v.isId(eventId);
+  const rid = v.isId(reviewId);
+  const uid = v.isId(userId);
+
+  const col = await events();
+  const ev = await col.findOne({ _id: new ObjectId(eid) });
+  if (!ev) throw new Error("event not found");
+
+  const rv = (ev.reviews || []).find((x) => x._id.toString() === rid);
+  if (!rv) throw new Error("review not found");
+  if (!isAdmin && rv.userId.toString() !== uid) throw new Error("not your review");
+
+  await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $pull: { reviews: { _id: new ObjectId(rid) } } }
+  );
+
+  const after = await col.findOne({ _id: new ObjectId(eid) });
+  let avg = null;
+  if (after.reviews && after.reviews.length > 0) {
+    let sum = 0;
+    for (const x of after.reviews) sum += Number(x.rating) || 0;
+    avg = (sum / after.reviews.length).toFixed(1);
+  }
+  return { averageRating: avg, count: (after.reviews || []).length };
+};
+
 module.exports = {
   create,
   getAll,
@@ -197,4 +313,8 @@ module.exports = {
   remove,
   addAttendee,
   removeAttendee,
+  addComment,
+  removeComment,
+  addReview,
+  removeReview,
 };
