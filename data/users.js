@@ -98,6 +98,34 @@ const remove = async (id) => {
   throw new Error("Not implemented");
 };
 
+const lists = ["createdEvents", "rsvpedEvents", "savedEvents"];
+
+const addEventTo = async (userId, listName, eventId) => {
+  const uid = v.isId(userId);
+  const eid = v.isId(eventId);
+  if (!lists.includes(listName)) throw new Error("invalid list name");
+  const col = await users();
+  const r = await col.updateOne(
+    { _id: new ObjectId(uid) },
+    { $addToSet: { [listName]: new ObjectId(eid) } }
+  );
+  if (r.matchedCount === 0) throw new Error("user not found");
+  return true;
+};
+
+const removeEventFrom = async (userId, listName, eventId) => {
+  const uid = v.isId(userId);
+  const eid = v.isId(eventId);
+  if (!lists.includes(listName)) throw new Error("invalid list name");
+  const col = await users();
+  const r = await col.updateOne(
+    { _id: new ObjectId(uid) },
+    { $pull: { [listName]: new ObjectId(eid) } }
+  );
+  if (r.matchedCount === 0) throw new Error("user not found");
+  return true;
+};
+
 module.exports = {
   create,
   getAll,
@@ -107,4 +135,6 @@ module.exports = {
   verify,
   update,
   remove,
+  addEventTo,
+  removeEventFrom,
 };
