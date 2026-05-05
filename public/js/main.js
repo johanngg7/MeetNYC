@@ -75,6 +75,6 @@ function initSearch() {
     if (bor) params.set("borough", bor);
     if (dt) params.set("date", dt);
     if (tm) params.set("time", tm);
-    window.location.href = "/search?" + params.toString();
+    window.location.href = "/events/search?" + params.toString();
   });
 }
