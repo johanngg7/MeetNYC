@@ -7,7 +7,7 @@
       <p id="error" style="color: red;">{{error}}</p>
     {{/if}}
 
-    <form action="/events/{{event._id}}/edit" method="POST" class="event-form">
+    <form action="/events/{{event._id}}/edit" method="POST" class="event-form" novalidate>
 
       <div class="form-group">
         <label for="title">Event Title *</label>
