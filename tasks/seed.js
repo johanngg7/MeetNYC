@@ -1,14 +1,209 @@
-const { connectDB } = require("../config/mongoConnection");
-const mongoose = require("mongoose");
+const { dbConnection, closeConnection } = require("../config/mongoConnection");
+const { events, venues, users } = require("../config/mongoCollections");
 
-const seed = async () => {
-  await connectDB();
-  console.log("Seeding database...");
+const PARKS_URL =
+  "https://data.cityofnewyork.us/resource/6v4b-5gp4.json?$limit=100&$order=date_and_time%20DESC";
+const PERM_URL =
+  "https://data.cityofnewyork.us/resource/tvpp-9vvx.json?$limit=100&$order=start_date_time%20DESC";
 
-  // TODO: Add seed data here
-
-  console.log("Done seeding.");
-  await mongoose.connection.close();
+const SEED_USER = {
+  firstName: "NYC",
+  lastName: "OpenData",
+  email: "nycdata@meetnyc.local",
+  handle: "nyc_data",
+  hashedPassword: "seeded",
+  borough: "Manhattan",
+  profilePicture: "",
+  isAdmin: false,
+  isVerified: true,
+  createdEvents: [],
+  rsvpedEvents: [],
+  savedEvents: [],
+  createdAt: new Date(),
 };
 
-seed();
+const boros = {
+  manhattan: "Manhattan",
+  brooklyn: "Brooklyn",
+  queens: "Queens",
+  bronx: "Bronx",
+  "staten island": "Staten Island",
+};
+
+const normBoro = (s) => {
+  if (!s || typeof s !== "string") return null;
+  return boros[s.trim().toLowerCase()] || null;
+};
+
+const ymd = (d) => {
+  if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + dd;
+};
+
+const hm = (d) => {
+  if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return h + ":" + min;
+};
+
+const addHours = (d, hours) => new Date(d.getTime() + hours * 60 * 60 * 1000);
+
+const ensureSeedUser = async () => {
+  const col = await users();
+  const ex = await col.findOne({ handle: SEED_USER.handle });
+  if (ex) {
+    await col.updateOne({ _id: ex._id }, { $set: { createdEvents: [] } });
+    return ex._id;
+  }
+  const r = await col.insertOne({ ...SEED_USER });
+  return r.insertedId;
+};
+
+const getOrCreateVenue = async (name, borough, locationType) => {
+  const col = await venues();
+  const ex = await col.findOne({ name, borough });
+  if (ex) return ex._id;
+  const r = await col.insertOne({
+    name,
+    borough,
+    locationType: locationType || null,
+    location: name,
+    createdAt: new Date(),
+  });
+  return r.insertedId;
+};
+
+const insertEvent = async (doc, userId) => {
+  const evCol = await events();
+  const r = await evCol.insertOne(doc);
+  const userCol = await users();
+  await userCol.updateOne(
+    { _id: userId },
+    { $addToSet: { createdEvents: r.insertedId } }
+  );
+  return r.insertedId;
+};
+
+const seedParks = async (userId) => {
+  const res = await fetch(PARKS_URL);
+  if (!res.ok) throw new Error("parks fetch failed: " + res.status);
+  const rows = await res.json();
+  let count = 0;
+  for (const row of rows) {
+    try {
+      const boro = normBoro(row.borough);
+      if (!boro) continue;
+      if (!row.event_name || !row.date_and_time) continue;
+      const start = new Date(row.date_and_time);
+      if (isNaN(start.getTime())) continue;
+      const end = addHours(start, 2);
+      const venueName = (row.location || "Unknown").trim();
+      const venueId = await getOrCreateVenue(venueName, boro, row.location_type);
+      const doc = {
+        title: row.event_name.trim(),
+        description: "",
+        category: row.category ? row.category.trim() : "Arts/Culture",
+        borough: boro,
+        venueName,
+        venueId,
+        location: venueName,
+        startDate: ymd(start),
+        endDate: ymd(start),
+        startTime: hm(start),
+        endTime: hm(end),
+        isPermitted: false,
+        isFlagged: false,
+        createdBy: userId,
+        creator: "NYC OpenData",
+        photos: [],
+        comments: [],
+        reviews: [],
+        attendees: [],
+        createdAt: new Date(),
+      };
+      await insertEvent(doc, userId);
+      count++;
+    } catch (e) {
+      console.error("parks row failed:", e.message);
+    }
+  }
+  return count;
+};
+
+const seedPermitted = async (userId) => {
+  const res = await fetch(PERM_URL);
+  if (!res.ok) throw new Error("permitted fetch failed: " + res.status);
+  const rows = await res.json();
+  let count = 0;
+  for (const row of rows) {
+    try {
+      const boro = normBoro(row.event_borough);
+      if (!boro) continue;
+      if (!row.event_name || !row.start_date_time || !row.end_date_time) continue;
+      const start = new Date(row.start_date_time);
+      const end = new Date(row.end_date_time);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+      const venueName = (row.event_location || "Unknown").trim();
+      const venueId = await getOrCreateVenue(venueName, boro, null);
+      const doc = {
+        title: row.event_name.trim(),
+        description: "",
+        category: row.event_type ? row.event_type.trim() : "Festival",
+        borough: boro,
+        venueName,
+        venueId,
+        location: venueName,
+        startDate: ymd(start),
+        endDate: ymd(end),
+        startTime: hm(start),
+        endTime: hm(end),
+        isPermitted: true,
+        isFlagged: false,
+        createdBy: userId,
+        creator: "NYC OpenData",
+        photos: [],
+        comments: [],
+        reviews: [],
+        attendees: [],
+        createdAt: new Date(),
+      };
+      await insertEvent(doc, userId);
+      count++;
+    } catch (e) {
+      console.error("permitted row failed:", e.message);
+    }
+  }
+  return count;
+};
+
+const seed = async () => {
+  await dbConnection();
+  console.log("Seeding...");
+
+  const evCol = await events();
+  const vCol = await venues();
+  await evCol.deleteMany({});
+  await vCol.deleteMany({});
+  console.log("wiped events and venues");
+
+  const userId = await ensureSeedUser();
+  console.log("seed user ready");
+
+  const a = await seedParks(userId);
+  console.log("parks events seeded:", a);
+
+  const b = await seedPermitted(userId);
+  console.log("permitted events seeded:", b);
+
+  console.log("Done seeding. Total:", a + b);
+  await closeConnection();
+};
+
+seed().catch((e) => {
+  console.error(e);
+  closeConnection().finally(() => process.exit(1));
+});

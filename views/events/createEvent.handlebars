@@ -3,6 +3,10 @@
     <h1>Create an Event</h1>
     <p class="subtitle">Share something happening in NYC</p>
 
+    {{#if error}}
+      <p id="error" style="color: red;">{{error}}</p>
+    {{/if}}
+
     <form action="/events/create" method="POST" class="event-form" novalidate>
 
     <div class="form-group">
@@ -14,6 +18,7 @@
           required
           maxlength="100"
           placeholder="e.g. Yoga in Central Park"
+          value="{{form.title}}"
         >
       </div>
 
@@ -21,11 +26,11 @@
         <label for="borough">Borough *</label>
         <select id="borough" name="borough" required>
           <option value="">Select borough</option>
-          <option value="Manhattan">Manhattan</option>
-          <option value="Brooklyn">Brooklyn</option>
-          <option value="Queens">Queens</option>
-          <option value="Bronx">Bronx</option>
-          <option value="Staten Island">Staten Island</option>
+          <option value="Manhattan" {{#if (eq form.borough "Manhattan")}}selected{{/if}}>Manhattan</option>
+          <option value="Brooklyn" {{#if (eq form.borough "Brooklyn")}}selected{{/if}}>Brooklyn</option>
+          <option value="Queens" {{#if (eq form.borough "Queens")}}selected{{/if}}>Queens</option>
+          <option value="Bronx" {{#if (eq form.borough "Bronx")}}selected{{/if}}>Bronx</option>
+          <option value="Staten Island" {{#if (eq form.borough "Staten Island")}}selected{{/if}}>Staten Island</option>
         </select>
       </div>
 
@@ -38,6 +43,7 @@
           required
           maxlength="100"
           placeholder="e.g. Central Park"
+          value="{{form.location}}"
         >
       </div>
 
@@ -45,13 +51,13 @@
         <label for="category">Category *</label>
         <select id="category" name="category" required>
           <option value="">Select category</option>
-          <option value="Academic/Out of School time">Academic/Out of School time</option>
-          <option value="Arts/Culture">Arts/Culture</option>
-          <option value="Family Festival">Family Festival</option>
-          <option value="Fitness">Fitness</option>
-          <option value="Mobile Unit">Mobile Unit</option>
-          <option value="Performance">Performance</option>
-          <option value="Sport">Sport</option>
+          <option value="Academic/Out of School time" {{#if (eq form.category "Academic/Out of School time")}}selected{{/if}}>Academic/Out of School time</option>
+          <option value="Arts/Culture" {{#if (eq form.category "Arts/Culture")}}selected{{/if}}>Arts/Culture</option>
+          <option value="Family Festival" {{#if (eq form.category "Family Festival")}}selected{{/if}}>Family Festival</option>
+          <option value="Fitness" {{#if (eq form.category "Fitness")}}selected{{/if}}>Fitness</option>
+          <option value="Mobile Unit" {{#if (eq form.category "Mobile Unit")}}selected{{/if}}>Mobile Unit</option>
+          <option value="Performance" {{#if (eq form.category "Performance")}}selected{{/if}}>Performance</option>
+          <option value="Sport" {{#if (eq form.category "Sport")}}selected{{/if}}>Sport</option>
         </select>
       </div>
 
@@ -63,24 +69,24 @@
           rows="5"
           maxlength="300"
           placeholder="Describe your event..."
-        ></textarea>
+        >{{form.description}}</textarea>
         <p class="char-count"><span id="descriptionCount">0</span>/300</p>
       </div>
 
       <div class="form-group">
         <label for="date">Date *</label>
-        <input id="date" name="date" type="date" required>
+        <input id="date" name="date" type="date" required value="{{form.date}}">
       </div>
 
       <div class="time-row">
         <div class="form-group">
           <label for="startTime">Start Time *</label>
-          <input id="startTime" name="startTime" type="time" required>
+          <input id="startTime" name="startTime" type="time" required value="{{form.startTime}}">
         </div>
 
         <div class="form-group">
           <label for="endTime">End Time *</label>
-          <input id="endTime" name="endTime" type="time" required>
+          <input id="endTime" name="endTime" type="time" required value="{{form.endTime}}">
         </div>
       </div>
 

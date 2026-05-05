@@ -12,7 +12,7 @@
       <div class="event-info">
         <p><strong>Category:</strong> {{event.category}}</p>
         <p><strong>Borough:</strong> {{event.borough}}</p>
-        <p><strong>Date:</strong> {{event.date}}</p>
+        <p><strong>Date:</strong> {{event.startDate}}</p>
         <p><strong>Start Time:</strong> {{event.startTime}}</p>
         <p><strong>End Time:</strong> {{event.endTime}}</p>
 
@@ -29,25 +29,20 @@
     <div class="event-side-panel">
       <h2>Event Actions</h2>
 
-      <p><strong>Attending:</strong> {{event.attendees.length}}</p>
-
-      {{#if event.capacity}}
-        <p><strong>Capacity:</strong> {{event.capacity}}</p>
-      {{/if}}
-
-      {{#if event.spotsLeft}}
-        <p><strong>Spots Left:</strong> {{event.spotsLeft}}</p>
-      {{/if}}
+      <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span></p>
 
       {{#if event.averageRating}}
         <p><strong>Average Rating:</strong> {{event.averageRating}} / 5</p>
       {{/if}}
 
       {{#if isLoggedIn}}
-        <form action="/events/{{event._id}}/rsvp" method="POST" class="event-form">
+        <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}">
           <div class="form-actions">
-            <button type="submit" class="btn-primary">RSVP</button>
+            <button id="rsvpBtn" type="submit" class="btn-primary">
+              {{#if isAttending}}Cancel RSVP{{else}}RSVP{{/if}}
+            </button>
           </div>
+          <p id="rsvpMsg" class="form-msg"></p>
         </form>
 
         <form action="/events/{{event._id}}/save" method="POST" class="event-form">
