@@ -34,7 +34,7 @@
       <p><strong>Average Rating:</strong> <span id="averageRating">{{#if event.averageRating}}{{event.averageRating}} / 5{{else}}No reviews{{/if}}</span></p>
 
       {{#if isLoggedIn}}
-        <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}">
+        <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
           <div class="form-actions">
             <button id="rsvpBtn" type="submit" class="btn-primary">
               {{#if isAttending}}Cancel RSVP{{else}}RSVP{{/if}}
@@ -43,7 +43,7 @@
           <p id="rsvpMsg" class="form-msg"></p>
         </form>
 
-        <form action="/events/{{event._id}}/save" method="POST" class="event-form">
+        <form action="/events/{{event._id}}/save" method="POST" class="event-form" novalidate>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Save Event</button>
           </div>
@@ -55,7 +55,7 @@
           <a href="/events/{{event._id}}/edit" class="btn-primary btn-link">Edit Event</a>
         </div>
 
-        <form action="/events/{{event._id}}/delete" method="POST" class="event-form">
+        <form action="/events/{{event._id}}/delete" method="POST" class="event-form" novalidate>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Delete Event</button>
           </div>
@@ -63,7 +63,7 @@
       {{/if}}
 
       {{#if isAdmin}}
-        <form action="/events/{{event._id}}/flag" method="POST" class="event-form">
+        <form action="/events/{{event._id}}/flag" method="POST" class="event-form" novalidate>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Admin Remove / Flag</button>
           </div>
@@ -77,7 +77,7 @@
     <h2>Comments</h2>
 
     {{#if isLoggedIn}}
-      <form id="commentForm" action="/events/{{event._id}}/comments" method="POST" class="event-form" data-id="{{event._id}}">
+      <form id="commentForm" action="/events/{{event._id}}/comments" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
         <div class="form-group">
           <label for="comment">Leave a Comment</label>
           <textarea id="comment" name="comment" rows="4" placeholder="Write your comment here..."></textarea>
@@ -111,7 +111,7 @@
     <h2>Reviews</h2>
 
     {{#if isLoggedIn}}
-      <form id="reviewForm" action="/events/{{event._id}}/reviews" method="POST" class="event-form" data-id="{{event._id}}">
+      <form id="reviewForm" action="/events/{{event._id}}/reviews" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
         <div class="form-group">
           <label for="rating">Rating</label>
           <select id="rating" name="rating" required>

@@ -188,8 +188,6 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-
-
 function initRegisterForm() {
   const form = document.getElementById("signup-form");
   if (!form) return;
@@ -252,7 +250,14 @@ function initRegisterForm() {
     } else if (!/[0-9]/.test(password.value)) {
       showError(password, "Password must contain at least one number.");
       valid = false;
+    } else if (!/[^a-zA-Z0-9]/.test(password.value)) {
+      showError(password, "Password must have a special charater.");
+      valid = false;
+    } else if (/\s/.test(password.value)) {
+      showError(password, "Password cannot have spaces.");
+      valid = false;
     }
+    
 
     if (!confirmPassword.value) {
       showError(confirmPassword, "Please confirm your password.");
@@ -454,8 +459,6 @@ function initEventDetailsForms() {
     });
   });
 }
-
-
 
 function initSaveButtons() {
   document.querySelectorAll(".save-btn").forEach(btn => {
