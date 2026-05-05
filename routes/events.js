@@ -53,12 +53,16 @@ router.post("/create", ensureAuthenticated, async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const ev = await eventData.getById(req.params.id);
-    const isOwner =
-      req.session.user && ev.createdBy.toString() === req.session.user._id;
+    const uid = req.session.user ? req.session.user._id : null;
+    const isOwner = uid && ev.createdBy.toString() === uid;
+    const isAttending =
+      uid && (ev.attendees || []).some((a) => a.userId.toString() === uid);
     res.render("events/eventDetails", {
       title: ev.title,
       event: ev,
       isOwner,
+      isAttending,
+      attendeeCount: (ev.attendees || []).length,
     });
   } catch (e) {
     res.status(404).render("events/eventDetails", {
@@ -104,6 +108,23 @@ router.post("/:id/delete", ensureAuthenticated, async (req, res) => {
     res.redirect("/events");
   } catch (e) {
     res.status(400).send(e.message);
+  }
+});
+
+router.post("/:id/rsvp", ensureAuthenticated, async (req, res) => {
+  try {
+    const ev = await eventData.getById(req.params.id);
+    const uid = req.session.user._id;
+    const attending = (ev.attendees || []).some((a) => a.userId.toString() === uid);
+    if (attending) {
+      await eventData.removeAttendee(req.params.id, uid);
+      return res.json({ status: "removed", count: (ev.attendees || []).length - 1 });
+    }
+    const name = req.session.user.firstName + " " + req.session.user.lastName;
+    await eventData.addAttendee(req.params.id, uid, name);
+    return res.json({ status: "added", count: (ev.attendees || []).length + 1 });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
   }
 });
 

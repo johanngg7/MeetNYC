@@ -147,4 +147,54 @@ const remove = async (id, userId) => {
   return { _id: ok, deleted: true };
 };
 
-module.exports = { create, getAll, getById, search, update, remove };
+const addAttendee = async (eventId, userId, userName) => {
+  const eid = v.isId(eventId);
+  const uid = v.isId(userId);
+  const name = v.isStr(userName, "userName");
+
+  const col = await events();
+  const ev = await col.findOne({ _id: new ObjectId(eid) });
+  if (!ev) throw new Error("event not found");
+
+  const already = (ev.attendees || []).some((a) => a.userId.toString() === uid);
+  if (already) throw new Error("already attending");
+
+  const att = {
+    _id: new ObjectId(),
+    userId: new ObjectId(uid),
+    userName: v.clean(name),
+    status: "going",
+    rsvpedAt: new Date(),
+  };
+  await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $push: { attendees: att } }
+  );
+  await userData.addEventTo(uid, "rsvpedEvents", eid);
+  return att;
+};
+
+const removeAttendee = async (eventId, userId) => {
+  const eid = v.isId(eventId);
+  const uid = v.isId(userId);
+
+  const col = await events();
+  const r = await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $pull: { attendees: { userId: new ObjectId(uid) } } }
+  );
+  if (r.matchedCount === 0) throw new Error("event not found");
+  await userData.removeEventFrom(uid, "rsvpedEvents", eid);
+  return true;
+};
+
+module.exports = {
+  create,
+  getAll,
+  getById,
+  search,
+  update,
+  remove,
+  addAttendee,
+  removeAttendee,
+};
