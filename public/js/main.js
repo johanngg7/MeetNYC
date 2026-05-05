@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initCounter();
   initDropdowns();
   initSearch();
+  initRsvp();
 });
 
 function initCounter() {
@@ -76,5 +77,31 @@ function initSearch() {
     if (dt) params.set("date", dt);
     if (tm) params.set("time", tm);
     window.location.href = "/events/search?" + params.toString();
+  });
+}
+
+function initRsvp() {
+  const form = document.getElementById("rsvpForm");
+  if (!form) return;
+  const btn = document.getElementById("rsvpBtn");
+  const cnt = document.getElementById("attendeeCount");
+  const msg = document.getElementById("rsvpMsg");
+  const id = form.dataset.id;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    btn.disabled = true;
+    try {
+      const res = await fetch("/events/" + id + "/rsvp", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "rsvp failed");
+      cnt.textContent = data.count;
+      btn.textContent = data.status === "added" ? "Cancel RSVP" : "RSVP";
+    } catch (err) {
+      msg.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
   });
 }
