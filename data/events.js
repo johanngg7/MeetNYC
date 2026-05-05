@@ -4,7 +4,7 @@ const userData = require("./users");
 const v = require("../helpers");
 
 const create = async (input, userId) => {
-  if (!input || typeof input !== "object") throw new Error("event input required");
+  if (!input || typeof input !== "object") throw new Error("Event input required");
   const uid = v.isId(userId);
 
   const title = v.isLen(input.title, "title", 3, 100);
@@ -14,7 +14,7 @@ const create = async (input, userId) => {
   const date = v.isDate(input.date);
   const startTime = v.isTime(input.startTime, "startTime");
   const endTime = v.isTime(input.endTime, "endTime");
-  if (startTime >= endTime) throw new Error("endTime must be after startTime");
+  if (startTime >= endTime) throw new Error("End time must be after start time");
 
   let description = "";
   if (input.description && typeof input.description === "string" && input.description.trim()) {
@@ -49,7 +49,7 @@ const create = async (input, userId) => {
 
   const col = await events();
   const r = await col.insertOne(doc);
-  if (!r.acknowledged) throw new Error("failed to create event");
+  if (!r.acknowledged) throw new Error("Failed to create event");
   doc._id = r.insertedId;
 
   await userData.addEventTo(uid, "createdEvents", r.insertedId.toString());
@@ -65,7 +65,7 @@ const getById = async (id) => {
   const ok = v.isId(id);
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(ok) });
-  if (!ev) throw new Error("event not found");
+  if (!ev) throw new Error("Event not found");
   if (ev.reviews && ev.reviews.length > 0) {
     let sum = 0;
     for (const r of ev.reviews) sum += Number(r.rating) || 0;
@@ -97,12 +97,12 @@ const search = async (filters) => {
 const update = async (id, userId, input) => {
   const ok = v.isId(id);
   const uid = v.isId(userId);
-  if (!input || typeof input !== "object") throw new Error("event input required");
+  if (!input || typeof input !== "object") throw new Error("Event input required");
 
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(ok) });
-  if (!ev) throw new Error("event not found");
-  if (ev.createdBy.toString() !== uid) throw new Error("not your event");
+  if (!ev) throw new Error("Event not found");
+  if (ev.createdBy.toString() !== uid) throw new Error("Not your event");
 
   const title = v.isLen(input.title, "title", 3, 100);
   const borough = v.isBorough(input.borough);
@@ -111,7 +111,7 @@ const update = async (id, userId, input) => {
   const date = v.isDate(input.date);
   const startTime = v.isTime(input.startTime, "startTime");
   const endTime = v.isTime(input.endTime, "endTime");
-  if (startTime >= endTime) throw new Error("endTime must be after startTime");
+  if (startTime >= endTime) throw new Error("End time must be after start time");
 
   let description = "";
   if (input.description && typeof input.description === "string" && input.description.trim()) {
@@ -132,7 +132,7 @@ const update = async (id, userId, input) => {
   };
 
   const r = await col.updateOne({ _id: new ObjectId(ok) }, { $set: set });
-  if (r.matchedCount === 0) throw new Error("event not found");
+  if (r.matchedCount === 0) throw new Error("Event not found");
   return await col.findOne({ _id: new ObjectId(ok) });
 };
 
@@ -142,11 +142,11 @@ const remove = async (id, userId) => {
 
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(ok) });
-  if (!ev) throw new Error("event not found");
-  if (ev.createdBy.toString() !== uid) throw new Error("not your event");
+  if (!ev) throw new Error("Event not found");
+  if (ev.createdBy.toString() !== uid) throw new Error("Not your event");
 
   const r = await col.deleteOne({ _id: new ObjectId(ok) });
-  if (r.deletedCount === 0) throw new Error("failed to delete event");
+  if (r.deletedCount === 0) throw new Error("Failed to delete event");
 
   await userData.removeEventFrom(uid, "createdEvents", ok);
   return { _id: ok, deleted: true };
@@ -159,10 +159,10 @@ const addAttendee = async (eventId, userId, userName) => {
 
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(eid) });
-  if (!ev) throw new Error("event not found");
+  if (!ev) throw new Error("Event not found");
 
   const already = (ev.attendees || []).some((a) => a.userId.toString() === uid);
-  if (already) throw new Error("already attending");
+  if (already) throw new Error("Already attending");
 
   const att = {
     _id: new ObjectId(),
@@ -188,7 +188,7 @@ const removeAttendee = async (eventId, userId) => {
     { _id: new ObjectId(eid) },
     { $pull: { attendees: { userId: new ObjectId(uid) } } }
   );
-  if (r.matchedCount === 0) throw new Error("event not found");
+  if (r.matchedCount === 0) throw new Error("Event not found");
   await userData.removeEventFrom(uid, "rsvpedEvents", eid);
   return true;
 };
@@ -211,7 +211,7 @@ const addComment = async (eventId, userId, userName, text) => {
     { _id: new ObjectId(eid) },
     { $push: { comments: cm } }
   );
-  if (r.matchedCount === 0) throw new Error("event not found");
+  if (r.matchedCount === 0) throw new Error("Event not found");
   return cm;
 };
 
@@ -222,11 +222,11 @@ const removeComment = async (eventId, commentId, userId, isAdmin) => {
 
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(eid) });
-  if (!ev) throw new Error("event not found");
+  if (!ev) throw new Error("Event not found");
 
   const cm = (ev.comments || []).find((c) => c._id.toString() === cid);
-  if (!cm) throw new Error("comment not found");
-  if (!isAdmin && cm.userId.toString() !== uid) throw new Error("not your comment");
+  if (!cm) throw new Error("Comment not found");
+  if (!isAdmin && cm.userId.toString() !== uid) throw new Error("Not your comment");
 
   await col.updateOne(
     { _id: new ObjectId(eid) },
@@ -241,7 +241,7 @@ const addReview = async (eventId, userId, userName, rating, text) => {
   const name = v.isStr(userName, "userName");
 
   const r = parseInt(rating, 10);
-  if (isNaN(r) || r < 1 || r > 5) throw new Error("rating must be 1-5");
+  if (isNaN(r) || r < 1 || r > 5) throw new Error("Rating must be 1-5");
 
   let cleanText = "";
   if (text && typeof text === "string" && text.trim()) {
@@ -250,10 +250,10 @@ const addReview = async (eventId, userId, userName, rating, text) => {
 
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(eid) });
-  if (!ev) throw new Error("event not found");
+  if (!ev) throw new Error("Event not found");
 
   const exists = (ev.reviews || []).some((rv) => rv.userId.toString() === uid);
-  if (exists) throw new Error("you already reviewed this event");
+  if (exists) throw new Error("You already reviewed this event");
 
   const review = {
     _id: new ObjectId(),
@@ -283,11 +283,11 @@ const removeReview = async (eventId, reviewId, userId, isAdmin) => {
 
   const col = await events();
   const ev = await col.findOne({ _id: new ObjectId(eid) });
-  if (!ev) throw new Error("event not found");
+  if (!ev) throw new Error("Event not found");
 
   const rv = (ev.reviews || []).find((x) => x._id.toString() === rid);
-  if (!rv) throw new Error("review not found");
-  if (!isAdmin && rv.userId.toString() !== uid) throw new Error("not your review");
+  if (!rv) throw new Error("Review not found");
+  if (!isAdmin && rv.userId.toString() !== uid) throw new Error("Not your review");
 
   await col.updateOne(
     { _id: new ObjectId(eid) },
