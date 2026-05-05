@@ -3,6 +3,16 @@ const { ObjectId } = require("mongodb");
 
 const boroughs = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"];
 
+const categories = [
+  "Academic/Out of School time",
+  "Arts/Culture",
+  "Family Festival",
+  "Fitness",
+  "Mobile Unit",
+  "Performance",
+  "Sport",
+];
+
 const isStr = (s, name) => {
   if (typeof s !== "string") throw new Error(name + " must be a string");
   const t = s.trim();
@@ -55,4 +65,47 @@ const isId = (s) => {
 
 const clean = (s) => xss(s);
 
-module.exports = { isStr, isName, isEmail, isHandle, isPwd, isBorough, isId, clean, boroughs };
+const isLen = (s, name, min, max) => {
+  const t = isStr(s, name);
+  if (t.length < min || t.length > max) {
+    throw new Error(name + " must be " + min + "-" + max + " chars");
+  }
+  return t;
+};
+
+const isCategory = (s) => {
+  const t = isStr(s, "category");
+  if (!categories.includes(t)) throw new Error("invalid category");
+  return t;
+};
+
+const isDate = (s) => {
+  const t = isStr(s, "date");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) throw new Error("date must be YYYY-MM-DD");
+  const d = new Date(t);
+  if (isNaN(d.getTime())) throw new Error("invalid date");
+  return t;
+};
+
+const isTime = (s, name) => {
+  const t = isStr(s, name);
+  if (!/^\d{2}:\d{2}$/.test(t)) throw new Error(name + " must be HH:MM");
+  return t;
+};
+
+module.exports = {
+  isStr,
+  isName,
+  isEmail,
+  isHandle,
+  isPwd,
+  isBorough,
+  isId,
+  isLen,
+  isCategory,
+  isDate,
+  isTime,
+  clean,
+  boroughs,
+  categories,
+};
