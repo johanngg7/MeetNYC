@@ -3,6 +3,16 @@ const { events } = require("../config/mongoCollections");
 const userData = require("./users");
 const v = require("../helpers");
 
+const slots = ["morning", "afternoon", "evening", "night"];
+
+const inSlot = (time, slot) => {
+  if (slot === "morning") return time >= "06:00" && time < "12:00";
+  if (slot === "afternoon") return time >= "12:00" && time < "17:00";
+  if (slot === "evening") return time >= "17:00" && time < "21:00";
+  if (slot === "night") return time >= "21:00" || time < "06:00";
+  return true;
+};
+
 const create = async (input, userId) => {
   if (!input || typeof input !== "object") throw new Error("Event input required");
   const uid = v.isId(userId);
@@ -71,6 +81,7 @@ const getById = async (id) => {
 
 const search = async (filters) => {
   const q = {};
+  let slot = "";
   if (filters && typeof filters === "object") {
     if (filters.borough) {
       const b = v.isBorough(filters.borough);
@@ -84,9 +95,15 @@ const search = async (filters) => {
       const d = v.isDate(filters.date);
       q.startDate = d;
     }
+    if (filters.time) {
+      slot = v.isStr(filters.time, "time").toLowerCase();
+      if (!slots.includes(slot)) throw new Error("invalid time");
+    }
   }
   const col = await events();
-  return await col.find(q).sort({ startDate: 1 }).toArray();
+  let list = await col.find(q).sort({ startDate: 1 }).toArray();
+  if (slot) list = list.filter((ev) => inSlot(ev.startTime, slot));
+  return list;
 };
 
 const update = async (id, userId, input) => {
