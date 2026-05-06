@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initSaveButtons();
   initDashboard();
   initNavbar();
+  initRsvp();
+  initComments();
+  initReviews();
 });
 
 
@@ -98,7 +101,33 @@ function initSearch() {
     }
 
     panel.querySelectorAll(".search-panel-error").forEach(el => el.remove());
-    window.location.href = "/search?" + params.toString();
+    window.location.href = "/events/search?" + params.toString();
+  });
+}
+
+function initRsvp() {
+  const form = document.getElementById("rsvpForm");
+  if (!form) return;
+  const btn = document.getElementById("rsvpBtn");
+  const cnt = document.getElementById("attendeeCount");
+  const msg = document.getElementById("rsvpMsg");
+  const id = form.dataset.id;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    btn.disabled = true;
+    try {
+      const res = await fetch("/events/" + id + "/rsvp", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "rsvp failed");
+      cnt.textContent = data.count;
+      btn.textContent = data.status === "added" ? "Cancel RSVP" : "RSVP";
+    } catch (err) {
+      msg.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
   });
 }
 
@@ -158,8 +187,6 @@ function showTextareaError(textarea, message) {
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
-
-
 
 function initRegisterForm() {
   const form = document.getElementById("signup-form");
@@ -223,7 +250,14 @@ function initRegisterForm() {
     } else if (!/[0-9]/.test(password.value)) {
       showError(password, "Password must contain at least one number.");
       valid = false;
+    } else if (!/[^a-zA-Z0-9]/.test(password.value)) {
+      showError(password, "Password must have a special charater.");
+      valid = false;
+    } else if (/\s/.test(password.value)) {
+      showError(password, "Password cannot have spaces.");
+      valid = false;
     }
+    
 
     if (!confirmPassword.value) {
       showError(confirmPassword, "Please confirm your password.");
@@ -426,8 +460,6 @@ function initEventDetailsForms() {
   });
 }
 
-
-
 function initSaveButtons() {
   document.querySelectorAll(".save-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -478,5 +510,167 @@ function initDashboard() {
 function initNavbar() {
   document.querySelectorAll(".navbar a").forEach(link => {
     if (link.href === window.location.href) link.classList.add("active");
+  });
+}
+
+function buildCommentNode(c, eid, isAdmin) {
+  const wrap = document.createElement("div");
+  wrap.className = "comment-card";
+  wrap.dataset.id = c._id;
+  const name = document.createElement("p");
+  const strong = document.createElement("strong");
+  strong.textContent = c.userName;
+  name.appendChild(strong);
+  const body = document.createElement("p");
+  body.textContent = c.text;
+  wrap.appendChild(name);
+  wrap.appendChild(body);
+  if (isAdmin) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-primary delete-comment-btn";
+    btn.dataset.cid = c._id;
+    btn.dataset.eid = eid;
+    btn.textContent = "Remove Comment";
+    btn.addEventListener("click", () => deleteComment(btn));
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
+function buildReviewNode(r, eid, isAdmin) {
+  const wrap = document.createElement("div");
+  wrap.className = "review-card";
+  wrap.dataset.id = r._id;
+  const head = document.createElement("p");
+  const strong = document.createElement("strong");
+  strong.textContent = r.userName;
+  head.appendChild(strong);
+  head.appendChild(document.createTextNode(" - " + r.rating + "/5"));
+  const body = document.createElement("p");
+  body.textContent = r.text;
+  wrap.appendChild(head);
+  wrap.appendChild(body);
+  if (isAdmin) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-primary delete-review-btn";
+    btn.dataset.rid = r._id;
+    btn.dataset.eid = eid;
+    btn.textContent = "Remove Review";
+    btn.addEventListener("click", () => deleteReview(btn));
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
+async function deleteComment(btn) {
+  if (!confirm("Remove this comment?")) return;
+  const eid = btn.dataset.eid;
+  const cid = btn.dataset.cid;
+  try {
+    const res = await fetch("/events/" + eid + "/comments/" + cid + "/delete", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "delete failed");
+    const card = document.querySelector('.comment-card[data-id="' + cid + '"]');
+    if (card) card.remove();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteReview(btn) {
+  if (!confirm("Remove this review?")) return;
+  const eid = btn.dataset.eid;
+  const rid = btn.dataset.rid;
+  try {
+    const res = await fetch("/events/" + eid + "/reviews/" + rid + "/delete", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "delete failed");
+    const card = document.querySelector('.review-card[data-id="' + rid + '"]');
+    if (card) card.remove();
+    const avg = document.getElementById("averageRating");
+    if (avg) {
+      avg.textContent = data.averageRating ? data.averageRating + " / 5" : "No reviews";
+    }
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function initComments() {
+  const form = document.getElementById("commentForm");
+  if (!form) return;
+  const ta = document.getElementById("comment");
+  const list = document.getElementById("commentList");
+  const msg = document.getElementById("commentMsg");
+  const eid = form.dataset.id;
+
+  document.querySelectorAll(".delete-comment-btn").forEach((b) => {
+    b.addEventListener("click", () => deleteComment(b));
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (form.querySelector(".field-error")) return;
+    msg.textContent = "";
+    try {
+      const res = await fetch("/events/" + eid + "/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "comment=" + encodeURIComponent(ta.value),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "comment failed");
+      const empty = document.getElementById("commentEmpty");
+      if (empty) empty.remove();
+      const isAdmin = document.body.dataset.isAdmin === "true";
+      const node = buildCommentNode(data.comment, eid, isAdmin);
+      list.prepend(node);
+      ta.value = "";
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+  });
+}
+
+function initReviews() {
+  const form = document.getElementById("reviewForm");
+  if (!form) return;
+  const rating = document.getElementById("rating");
+  const ta = document.getElementById("review");
+  const list = document.getElementById("reviewList");
+  const msg = document.getElementById("reviewMsg");
+  const avg = document.getElementById("averageRating");
+  const eid = form.dataset.id;
+
+  document.querySelectorAll(".delete-review-btn").forEach((b) => {
+    b.addEventListener("click", () => deleteReview(b));
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (form.querySelector(".field-error")) return;
+    msg.textContent = "";
+    try {
+      const body = "rating=" + encodeURIComponent(rating.value) + "&review=" + encodeURIComponent(ta.value);
+      const res = await fetch("/events/" + eid + "/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "review failed");
+      const empty = document.getElementById("reviewEmpty");
+      if (empty) empty.remove();
+      const isAdmin = document.body.dataset.isAdmin === "true";
+      const node = buildReviewNode(data.review, eid, isAdmin);
+      list.prepend(node);
+      rating.value = "";
+      ta.value = "";
+      if (avg) avg.textContent = data.averageRating + " / 5";
+    } catch (err) {
+      msg.textContent = err.message;
+    }
   });
 }

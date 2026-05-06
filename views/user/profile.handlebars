@@ -2,8 +2,8 @@
   <div class="profile-container">
 
     <div class="profile-header">
-      <h1>{{user.firstName}}</h1>
-      <p class="profile-subtitle">Activities on MeetNYC</p>
+      <h1>{{user.firstName}} {{user.lastName}}</h1>
+      <p class="profile-subtitle">@{{user.handle}} • {{user.borough}}</p>
     </div>
 
     <div class="profile-section">
@@ -31,6 +31,20 @@
         </div>
       {{else}}
         <p class="empty-text">Haven't RSVP'd to any events yet.</p>
+      {{/if}}
+    </div>
+
+    <div class="profile-section">
+      <h2>Saved Events</h2>
+
+      {{#if savedEvents.length}}
+        <div class="event-grid">
+          {{#each savedEvents}}
+            {{> eventCard}}
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="empty-text">No saved events yet.</p>
       {{/if}}
     </div>
 

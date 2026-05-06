@@ -1,0 +1,95 @@
+<section class="create-event-page">
+  <div class="create-event-card">
+    <h1>Edit Event</h1>
+    <p class="subtitle">Update your event details</p>
+
+    {{#if error}}
+      <p id="error" style="color: red;">{{error}}</p>
+    {{/if}}
+
+    <form action="/events/{{event._id}}/edit" method="POST" class="event-form" novalidate>
+
+      <div class="form-group">
+        <label for="title">Event Title *</label>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          required
+          maxlength="100"
+          value="{{event.title}}"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="borough">Borough *</label>
+        <select id="borough" name="borough" required>
+          <option value="">Select borough</option>
+          <option value="Manhattan" {{#if (eq event.borough "Manhattan")}}selected{{/if}}>Manhattan</option>
+          <option value="Brooklyn" {{#if (eq event.borough "Brooklyn")}}selected{{/if}}>Brooklyn</option>
+          <option value="Queens" {{#if (eq event.borough "Queens")}}selected{{/if}}>Queens</option>
+          <option value="Bronx" {{#if (eq event.borough "Bronx")}}selected{{/if}}>Bronx</option>
+          <option value="Staten Island" {{#if (eq event.borough "Staten Island")}}selected{{/if}}>Staten Island</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Location *</label>
+        <input
+          id="location"
+          name="location"
+          type="text"
+          required
+          maxlength="100"
+          value="{{event.location}}"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category *</label>
+        <select id="category" name="category" required>
+          <option value="">Select category</option>
+          <option value="Academic/Out of School time" {{#if (eq event.category "Academic/Out of School time")}}selected{{/if}}>Academic/Out of School time</option>
+          <option value="Arts/Culture" {{#if (eq event.category "Arts/Culture")}}selected{{/if}}>Arts/Culture</option>
+          <option value="Family Festival" {{#if (eq event.category "Family Festival")}}selected{{/if}}>Family Festival</option>
+          <option value="Fitness" {{#if (eq event.category "Fitness")}}selected{{/if}}>Fitness</option>
+          <option value="Mobile Unit" {{#if (eq event.category "Mobile Unit")}}selected{{/if}}>Mobile Unit</option>
+          <option value="Performance" {{#if (eq event.category "Performance")}}selected{{/if}}>Performance</option>
+          <option value="Sport" {{#if (eq event.category "Sport")}}selected{{/if}}>Sport</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description (optional)</label>
+        <textarea
+          id="description"
+          name="description"
+          rows="5"
+          maxlength="300"
+        >{{event.description}}</textarea>
+        <p class="char-count"><span id="descriptionCount">0</span>/300</p>
+      </div>
+
+      <div class="form-group">
+        <label for="date">Date *</label>
+        <input id="date" name="date" type="date" required value="{{event.startDate}}">
+      </div>
+
+      <div class="time-row">
+        <div class="form-group">
+          <label for="startTime">Start Time *</label>
+          <input id="startTime" name="startTime" type="time" required value="{{event.startTime}}">
+        </div>
+
+        <div class="form-group">
+          <label for="endTime">End Time *</label>
+          <input id="endTime" name="endTime" type="time" required value="{{event.endTime}}">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</section>

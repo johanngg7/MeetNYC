@@ -3,7 +3,7 @@ const { engine } = require("express-handlebars");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const path = require("path");
-const { connectDB, mongoUrl } = require("./config/mongoConnection");
+const { dbConnection, mongoUrl } = require("./config/mongoConnection");
 const configRoutes = require("./routes");
 
 const app = express();
@@ -43,7 +43,7 @@ app.use(
 // Make session data available to templates
 app.use((req, res, next) => {
   res.locals.isLoggedIn = !!req.session.user;
-  res.locals.isAdmin = req.session.user?.role === "admin";
+  res.locals.isAdmin = req.session.user?.isAdmin === true;
   res.locals.user = req.session.user || null;
   next();
 });
@@ -53,7 +53,8 @@ configRoutes(app);
 
 // Start server
 const start = async () => {
-  await connectDB();
+  await dbConnection();
+  console.log("MongoDB connected");
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
