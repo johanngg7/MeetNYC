@@ -2,7 +2,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   initCounter();
-  initDropdowns();
   initSearch();
   injectErrorStyles();
   initRegisterForm();
@@ -29,78 +28,30 @@ function initCounter() {
   });
 }
 
-function initDropdowns() {
-  const btns = document.querySelectorAll(".dropdown-btn");
-  btns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const menu = btn.nextElementSibling;
-      document.querySelectorAll(".dropdown-menu").forEach((m) => {
-        if (m !== menu) m.classList.remove("open");
-      });
-      menu.classList.toggle("open");
-    });
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".dropdown")) {
-      document.querySelectorAll(".dropdown-menu").forEach((m) => {
-        m.classList.remove("open");
-      });
-    }
-  });
-
-  const panel = document.querySelector(".search-panel");
-  if (!panel) return;
-
-  const dds = panel.querySelectorAll(".dropdown");
-  dds.forEach((dd) => {
-    const lbl = dd.querySelector(".dropdown-btn span:first-child");
-    const items = dd.querySelectorAll(".dropdown-menu div:not(.date-picker-row)");
-    items.forEach((it) => {
-      it.addEventListener("click", () => {
-        items.forEach((i) => i.classList.remove("selected"));
-        it.classList.add("selected");
-        lbl.textContent = it.textContent.trim();
-        dd.dataset.value = it.textContent.trim();
-      });
-    });
-    const md = dd.querySelector("#manual-date");
-    if (md) {
-      md.addEventListener("change", () => {
-        lbl.textContent = md.value;
-        dd.dataset.value = md.value;
-      });
-    }
-  });
-}
-
 function initSearch() {
-  const panel = document.querySelector(".search-panel");
-  if (!panel) return;
-  const btn = panel.querySelector(".search-btn");
-  if (!btn) return;
+  const form = document.getElementById("home-search-form");
+  if (!form) return;
 
-  btn.addEventListener("click", () => {
-    const dds = panel.querySelectorAll(".dropdown");
+  const err = document.getElementById("search-error");
+  const date = document.getElementById("date");
+  if (date) date.min = new Date().toISOString().split("T")[0];
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
     const params = new URLSearchParams();
-    const bor = dds[0]?.dataset.value;
-    const dt  = dds[1]?.dataset.value;
-    const tm  = dds[2]?.dataset.value;
-    if (bor) params.set("borough", bor);
-    if (dt)  params.set("date",    dt);
-    if (tm)  params.set("time",    tm);
 
-    // Validation: require at least one filter
-    if (!bor && !dt && !tm) {
-      panel.querySelectorAll(".search-panel-error").forEach(el => el.remove());
-      const err = document.createElement("p");
-      err.className = "search-panel-error field-error";
-      err.textContent = "Please select at least one filter before searching.";
-      panel.appendChild(err);
+    for (const [key, val] of data.entries()) {
+      const txt = String(val).trim();
+      if (txt) params.set(key, txt);
+    }
+
+    if ([...params.keys()].length === 0) {
+      if (err) err.textContent = "Choose at least one filter.";
       return;
     }
 
-    panel.querySelectorAll(".search-panel-error").forEach(el => el.remove());
+    if (err) err.textContent = "";
     window.location.href = "/events/search?" + params.toString();
   });
 }
@@ -210,7 +161,7 @@ function initRegisterForm() {
       showError(handle, "Handle is required.");
       valid = false;
     } else if (!/^[a-zA-Z0-9_]{3,20}$/.test(handle.value.trim())) {
-      showError(handle, "Handle must be 3–20 characters (letters, numbers, underscores).");
+      showError(handle, "Handle must be 3-20 characters (letters, numbers, underscores).");
       valid = false;
     }
 
@@ -395,7 +346,6 @@ function initCreateEventForm() {
 
 
 function initEventDetailsForms() {
-  // Comment form
   const commentTextarea = document.getElementById("comment");
   if (commentTextarea) {
     const commentForm = commentTextarea.closest("form");
@@ -414,7 +364,6 @@ function initEventDetailsForms() {
     });
   }
 
-  // Review form
   const ratingSelect   = document.getElementById("rating");
   const reviewTextarea = document.getElementById("review");
   if (ratingSelect && reviewTextarea) {
@@ -441,7 +390,6 @@ function initEventDetailsForms() {
     });
   }
 
-  // Delete confirmation
   document.querySelectorAll('form[action*="/delete"]').forEach(form => {
     form.addEventListener("submit", e => {
       if (!confirm("Are you sure you want to delete this? This cannot be undone.")) {
@@ -450,7 +398,6 @@ function initEventDetailsForms() {
     });
   });
 
-  // Admin flag confirmation
   document.querySelectorAll('form[action*="/flag"]').forEach(form => {
     form.addEventListener("submit", e => {
       if (!confirm("Flag / remove this event? This action will be logged.")) {
@@ -468,7 +415,7 @@ function initSaveButtons() {
 
       btn.disabled = true;
       const original = btn.textContent;
-      btn.textContent = "Saving…";
+      btn.textContent = "Saving...";
 
       try {
         const res = await fetch(`/events/${eventId}/save`, {
