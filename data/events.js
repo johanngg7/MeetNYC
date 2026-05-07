@@ -503,6 +503,9 @@ const addReview = async (eventId, userId, userName, rating, text) => {
   const ev = await col.findOne({ _id: new ObjectId(eid) });
   if (!ev) throw new Error("Event not found");
 
+  const endDt = new Date(ev.endDate + "T" + ev.endTime + ":00");
+  if (endDt > new Date()) throw new Error("Reviews can only be submitted after the event has ended");
+
   const exists = (ev.reviews || []).some((rv) => rv.userId.toString() === uid);
   if (exists) throw new Error("You already reviewed this event");
 

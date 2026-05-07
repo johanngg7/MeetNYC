@@ -91,12 +91,14 @@ router.get("/:id", async (req, res) => {
     }
     const similarEvents = await eventData.getSimilar(req.params.id, 4);
     const savedEventIds = await getSavedIds(req);
+    const eventEnded = new Date(ev.endDate + "T" + ev.endTime + ":00") <= new Date();
     res.render("events/eventDetails", {
       title: ev.title,
       event: ev,
       isOwner,
       isAttending,
       isSaved,
+      eventEnded,
       attendeeCount: (ev.attendees || []).length,
       similarEvents,
       savedEventIds,
