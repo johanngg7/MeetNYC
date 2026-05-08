@@ -41,6 +41,7 @@ router.get("/profile", ensureAuthenticated, async (req, res) => {
       rsvpedEvents: rsvped,
       savedEvents: saved,
       savedEventIds: savedIds,
+      isOwner: true,
     });
   } catch (e) {
     res.status(500).send(e.message);
@@ -106,6 +107,32 @@ router.post("/profile/delete", ensureAuthenticated, async (req, res) => {
     res.status(400).render("error", {
       title: "Error",
       status: 400,
+      message: e.message,
+    });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    if (req.session.user && req.session.user._id === req.params.id) {
+      return res.redirect("/user/profile");
+    }
+    const u = await userData.getById(req.params.id);
+    const created = await fetchEvents(u.createdEvents);
+    const rsvped = await fetchEvents(u.rsvpedEvents);
+    res.render("user/profile", {
+      title: u.firstName + " " + u.lastName,
+      user: u,
+      createdEvents: created,
+      rsvpedEvents: rsvped,
+      savedEvents: [],
+      savedEventIds: [],
+      isOwner: false,
+    });
+  } catch (e) {
+    res.status(404).render("error", {
+      title: "Error",
+      status: 404,
       message: e.message,
     });
   }

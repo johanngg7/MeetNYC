@@ -17,15 +17,17 @@
         </span>
       </div>
 
-      <div class="profile-actions">
-        <a href="/user/profile/edit" class="secondary-btn btn-link">Edit Profile</a>
+      {{#if isOwner}}
+        <div class="profile-actions">
+          <a href="/user/profile/edit" class="secondary-btn btn-link">Edit Profile</a>
 
-        {{#unless isAdmin}}
-          <form action="/user/profile/delete" method="POST" class="event-form" novalidate>
-            <button type="submit" class="danger-btn">Delete Account</button>
-          </form>
-        {{/unless}}
-      </div>
+          {{#unless isAdmin}}
+            <form action="/user/profile/delete" method="POST" class="event-form" novalidate>
+              <button type="submit" class="danger-btn">Delete Account</button>
+            </form>
+          {{/unless}}
+        </div>
+      {{/if}}
     </div>
 
     <div class="profile-section">
@@ -56,19 +58,21 @@
       {{/if}}
     </div>
 
-    <div class="profile-section">
-      <h2>Saved Events</h2>
+    {{#if isOwner}}
+      <div class="profile-section">
+        <h2>Saved Events</h2>
 
-      {{#if savedEvents.length}}
-        <div class="event-grid">
-          {{#each savedEvents}}
-            {{> eventCard}}
-          {{/each}}
-        </div>
-      {{else}}
-        <p class="empty-text">No saved events yet.</p>
-      {{/if}}
-    </div>
+        {{#if savedEvents.length}}
+          <div class="event-grid">
+            {{#each savedEvents}}
+              {{> eventCard}}
+            {{/each}}
+          </div>
+        {{else}}
+          <p class="empty-text">No saved events yet.</p>
+        {{/if}}
+      </div>
+    {{/if}}
 
   </div>
 </section>
