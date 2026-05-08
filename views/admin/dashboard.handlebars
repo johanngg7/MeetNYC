@@ -1,22 +1,26 @@
 <section class="section-block">
   <h1>Admin Dashboard</h1>
 
+  {{#if error}}
+    <p class="error-text">{{error}}</p>
+  {{/if}}
+
   <div class="details-content-card">
     <h2>Flagged Events</h2>
 
     {{#if flaggedEvents.length}}
       {{#each flaggedEvents}}
-        <div class="admin-item">
-          <p><strong>{{title}}</strong></p>
+        <div class="admin-item" data-event-id="{{_id}}">
+          <p><strong><a href="/events/{{_id}}">{{title}}</a></strong> — {{borough}}, {{startDate}}</p>
 
           <div class="admin-actions">
-            <button class="secondary-btn" type="button">Review</button>
-            <button class="danger-btn" type="button">Remove</button>
+            <button class="secondary-btn admin-unflag-event" data-id="{{_id}}">Unflag</button>
+            <button class="danger-btn admin-remove-event" data-id="{{_id}}">Remove</button>
           </div>
         </div>
       {{/each}}
     {{else}}
-      <p class="empty-text">No flagged events 🎉</p>
+      <p class="empty-text">No flagged events</p>
     {{/if}}
   </div>
 
@@ -25,17 +29,17 @@
 
     {{#if flaggedComments.length}}
       {{#each flaggedComments}}
-        <div class="admin-item">
+        <div class="admin-item" data-comment-id="{{_id}}">
+          <p><strong>{{userName}}</strong> on <a href="/events/{{eventId}}">{{eventTitle}}</a></p>
           <p>{{text}}</p>
 
           <div class="admin-actions">
-            <button class="secondary-btn" type="button">Keep</button>
-            <button class="danger-btn" type="button">Delete</button>
+            <button class="danger-btn admin-delete-comment" data-event-id="{{eventId}}" data-comment-id="{{_id}}">Delete</button>
           </div>
         </div>
       {{/each}}
     {{else}}
-      <p class="empty-text">No flagged comments 🎉</p>
+      <p class="empty-text">No flagged comments</p>
     {{/if}}
   </div>
 
