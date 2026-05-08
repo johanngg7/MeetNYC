@@ -43,11 +43,11 @@
           <p id="rsvpMsg" class="form-msg"></p>
         </form>
 
-        <form action="/events/{{event._id}}/save" method="POST" class="event-form" novalidate>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Save Event</button>
-          </div>
-        </form>
+        <div class="form-actions">
+          <button type="button" class="btn-primary save-btn{{#if isSaved}} saved{{/if}}" data-id="{{event._id}}">
+            {{#if isSaved}}Unsave Event{{else}}Save Event{{/if}}
+          </button>
+        </div>
       {{/if}}
 
       {{#if isOwner}}
@@ -63,11 +63,12 @@
       {{/if}}
 
       {{#if isAdmin}}
-        <form action="/events/{{event._id}}/flag" method="POST" class="event-form" novalidate>
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">Admin Remove / Flag</button>
-          </div>
-        </form>
+        <div class="form-actions">
+          <button type="button" class="btn-primary admin-flag-btn" data-id="{{event._id}}">Flag Event</button>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-primary admin-remove-btn" data-id="{{event._id}}">Remove Event</button>
+        </div>
       {{/if}}
     </div>
 
