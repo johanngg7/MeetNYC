@@ -66,21 +66,21 @@
       <p class="event-location">{{location}}</p>
     {{/if}}
 
-    {{#if spotsLeft}}
-      <p class="spots-left">{{spotsLeft}} spots left</p>
-    {{else}}
-      <p class="spots-left full">No spots left</p>
-    {{/if}}
-
     <div class="event-card-actions">
       <a href="/events/{{_id}}" class="primary-btn">View</a>
 
       {{#if ../isLoggedIn}}
-        <button class="secondary-btn save-btn" type="button" data-id="{{_id}}">
-          ♡ Save
-        </button>
+        {{#if (hasId ../savedEventIds _id)}}
+          <button class="secondary-btn save-btn saved" type="button" data-id="{{_id}}">
+            Unsave Event
+          </button>
+        {{else}}
+          <button class="secondary-btn save-btn" type="button" data-id="{{_id}}">
+            Save Event
+          </button>
+        {{/if}}
       {{else}}
-        <a href="/login" class="secondary-btn">♡ Save</a>
+        <a href="/login" class="secondary-btn">Save Event</a>
       {{/if}}
     </div>
   </div>

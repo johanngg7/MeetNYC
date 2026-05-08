@@ -163,6 +163,23 @@ const removeEventFrom = async (userId, listName, eventId) => {
   return true;
 };
 
+const removeEventFromAll = async (eventId) => {
+  const eid = v.isId(eventId);
+  const oid = new ObjectId(eid);
+  const col = await users();
+  await col.updateMany(
+    {},
+    {
+      $pull: {
+        createdEvents: oid,
+        rsvpedEvents: oid,
+        savedEvents: oid,
+      },
+    }
+  );
+  return true;
+};
+
 module.exports = {
   create,
   getAll,
@@ -174,4 +191,5 @@ module.exports = {
   remove,
   addEventTo,
   removeEventFrom,
+  removeEventFromAll,
 };

@@ -1,5 +1,6 @@
 const { dbConnection, closeConnection } = require("../config/mongoConnection");
 const { events, venues, users } = require("../config/mongoCollections");
+const bcrypt = require("bcryptjs");
 
 const PARKS_URL =
   "https://data.cityofnewyork.us/resource/6v4b-5gp4.json?$limit=100&$order=date_and_time%20DESC";
@@ -15,6 +16,23 @@ const SEED_USER = {
   borough: "Manhattan",
   profilePicture: "",
   isAdmin: false,
+  isVerified: true,
+  createdEvents: [],
+  rsvpedEvents: [],
+  savedEvents: [],
+  createdAt: new Date(),
+};
+
+const ADMIN_PASSWORD = "AdminPass1!";
+
+const ADMIN_USER = {
+  firstName: "Meet",
+  lastName: "Admin",
+  email: "admin@meetnyc.local",
+  handle: "admin",
+  borough: "Manhattan",
+  profilePicture: "",
+  isAdmin: true,
   isVerified: true,
   createdEvents: [],
   rsvpedEvents: [],
@@ -54,12 +72,31 @@ const addHours = (d, hours) => new Date(d.getTime() + hours * 60 * 60 * 1000);
 
 const ensureSeedUser = async () => {
   const col = await users();
+  const hash = await bcrypt.hash("OpenData1!", 10);
   const ex = await col.findOne({ handle: SEED_USER.handle });
   if (ex) {
-    await col.updateOne({ _id: ex._id }, { $set: { createdEvents: [] } });
+    await col.updateOne(
+      { _id: ex._id },
+      { $set: { ...SEED_USER, hashedPassword: hash, createdEvents: [] } }
+    );
     return ex._id;
   }
-  const r = await col.insertOne({ ...SEED_USER });
+  const r = await col.insertOne({ ...SEED_USER, hashedPassword: hash });
+  return r.insertedId;
+};
+
+const ensureAdminUser = async () => {
+  const col = await users();
+  const hash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  const ex = await col.findOne({ handle: ADMIN_USER.handle });
+  if (ex) {
+    await col.updateOne(
+      { _id: ex._id },
+      { $set: { ...ADMIN_USER, hashedPassword: hash } }
+    );
+    return ex._id;
+  }
+  const r = await col.insertOne({ ...ADMIN_USER, hashedPassword: hash });
   return r.insertedId;
 };
 
@@ -192,6 +229,9 @@ const seed = async () => {
 
   const userId = await ensureSeedUser();
   console.log("seed user ready");
+
+  await ensureAdminUser();
+  console.log("admin user ready");
 
   const a = await seedParks(userId);
   console.log("parks events seeded:", a);
