@@ -398,10 +398,29 @@ function initEventDetailsForms() {
     });
   });
 
-  document.querySelectorAll('form[action*="/flag"]').forEach(form => {
-    form.addEventListener("submit", e => {
-      if (!confirm("Flag / remove this event? This action will be logged.")) {
-        e.preventDefault();
+  document.querySelectorAll(".admin-flag-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Flag this event?")) return;
+      try {
+        const res = await fetch("/admin/events/" + btn.dataset.id + "/flag", { method: "POST" });
+        if (!res.ok) throw new Error("flag failed");
+        btn.textContent = "Flagged";
+        btn.disabled = true;
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll(".admin-remove-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Remove this event permanently?")) return;
+      try {
+        const res = await fetch("/admin/events/" + btn.dataset.id + "/remove", { method: "POST" });
+        if (!res.ok) throw new Error("remove failed");
+        window.location.href = "/events";
+      } catch (err) {
+        alert(err.message);
       }
     });
   });
@@ -414,28 +433,22 @@ function initSaveButtons() {
       if (!eventId) return;
 
       btn.disabled = true;
-      const original = btn.textContent;
-      btn.textContent = "Saving...";
-
       try {
-        const res = await fetch(`/events/${eventId}/save`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (res.ok) {
-          btn.textContent = "♥ Saved";
+        const res = await fetch("/events/" + eventId + "/save", { method: "POST" });
+        if (res.status === 401) return window.location.href = "/login";
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "save failed");
+        if (data.status === "saved") {
+          btn.textContent = "Unsave Event";
           btn.classList.add("saved");
-        } else if (res.status === 401) {
-          window.location.href = "/login";
         } else {
-          btn.textContent = original;
-          btn.disabled = false;
-          alert("Could not save event. Please try again.");
+          btn.textContent = "Save Event";
+          btn.classList.remove("saved");
         }
-      } catch {
-        btn.textContent = original;
+      } catch (err) {
+        alert(err.message);
+      } finally {
         btn.disabled = false;
-        alert("Network error. Please check your connection.");
       }
     });
   });
@@ -443,12 +456,44 @@ function initSaveButtons() {
 
 
 function initDashboard() {
-  document.querySelectorAll(".danger-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const item  = btn.closest(".admin-item");
-      const label = item?.querySelector("p")?.textContent.trim() ?? "this item";
-      if (!confirm(`Are you sure you want to remove "${label}"?`)) {
-        e.preventDefault();
+  document.querySelectorAll(".admin-unflag-event").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch("/admin/events/" + id + "/unflag", { method: "POST" });
+        if (!res.ok) throw new Error("unflag failed");
+        btn.closest(".admin-item").remove();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll(".admin-remove-event").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      if (!confirm("Remove this event permanently?")) return;
+      try {
+        const res = await fetch("/admin/events/" + id + "/remove", { method: "POST" });
+        if (!res.ok) throw new Error("remove failed");
+        btn.closest(".admin-item").remove();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll(".admin-delete-comment").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const eid = btn.dataset.eventId;
+      const cid = btn.dataset.commentId;
+      if (!confirm("Delete this comment permanently?")) return;
+      try {
+        const res = await fetch("/admin/events/" + eid + "/comments/" + cid + "/delete", { method: "POST" });
+        if (!res.ok) throw new Error("delete failed");
+        btn.closest(".admin-item").remove();
+      } catch (err) {
+        alert(err.message);
       }
     });
   });
