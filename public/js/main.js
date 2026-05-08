@@ -505,6 +505,20 @@ function initDashboard() {
       }
     });
   });
+
+  document.querySelectorAll(".admin-unflag-comment").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const eid = btn.dataset.eventId;
+      const cid = btn.dataset.commentId;
+      try {
+        const res = await fetch("/admin/events/" + eid + "/comments/" + cid + "/unflag", { method: "POST" });
+        if (!res.ok) throw new Error("unflag failed");
+        btn.closest(".admin-item").remove();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
 }
 
 function initNavbar() {

@@ -380,6 +380,18 @@ const flagComment = async (eventId, commentId) => {
   return true;
 };
 
+const unflagComment = async (eventId, commentId) => {
+  const eid = v.isId(eventId);
+  const cid = v.isId(commentId);
+  const col = await events();
+  const r = await col.updateOne(
+    { _id: new ObjectId(eid), "comments._id": new ObjectId(cid) },
+    { $set: { "comments.$.isFlagged": false } }
+  );
+  if (r.matchedCount === 0) throw new Error("Event or comment not found");
+  return true;
+};
+
 const adminRemoveEvent = async (eventId) => {
   const eid = v.isId(eventId);
   const col = await events();
@@ -408,5 +420,6 @@ module.exports = {
   getFlagged,
   getFlaggedComments,
   flagComment,
+  unflagComment,
   adminRemoveEvent,
 };
