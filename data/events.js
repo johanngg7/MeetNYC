@@ -321,6 +321,75 @@ const removeReview = async (eventId, reviewId, userId, isAdmin) => {
   return { averageRating: avg, count: (after.reviews || []).length };
 };
 
+const flagEvent = async (eventId) => {
+  const eid = v.isId(eventId);
+  const col = await events();
+  const r = await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $set: { isFlagged: true } }
+  );
+  if (r.matchedCount === 0) throw new Error("Event not found");
+  return true;
+};
+
+const unflagEvent = async (eventId) => {
+  const eid = v.isId(eventId);
+  const col = await events();
+  const r = await col.updateOne(
+    { _id: new ObjectId(eid) },
+    { $set: { isFlagged: false } }
+  );
+  if (r.matchedCount === 0) throw new Error("Event not found");
+  return true;
+};
+
+const getFlagged = async () => {
+  const col = await events();
+  return await col.find({ isFlagged: true }).sort({ createdAt: -1 }).toArray();
+};
+
+const getFlaggedComments = async () => {
+  const col = await events();
+  const all = await col
+    .find({ "comments.isFlagged": true })
+    .toArray();
+  const result = [];
+  for (const ev of all) {
+    for (const cm of ev.comments || []) {
+      if (cm.isFlagged) {
+        result.push({
+          ...cm,
+          eventId: ev._id,
+          eventTitle: ev.title,
+        });
+      }
+    }
+  }
+  return result;
+};
+
+const flagComment = async (eventId, commentId) => {
+  const eid = v.isId(eventId);
+  const cid = v.isId(commentId);
+  const col = await events();
+  const r = await col.updateOne(
+    { _id: new ObjectId(eid), "comments._id": new ObjectId(cid) },
+    { $set: { "comments.$.isFlagged": true } }
+  );
+  if (r.matchedCount === 0) throw new Error("Event or comment not found");
+  return true;
+};
+
+const adminRemoveEvent = async (eventId) => {
+  const eid = v.isId(eventId);
+  const col = await events();
+  const ev = await col.findOne({ _id: new ObjectId(eid) });
+  if (!ev) throw new Error("Event not found");
+  await col.deleteOne({ _id: new ObjectId(eid) });
+  await userData.removeEventFrom(ev.createdBy.toString(), "createdEvents", eid);
+  return { _id: eid, deleted: true };
+};
+
 module.exports = {
   create,
   getAll,
@@ -334,4 +403,10 @@ module.exports = {
   removeComment,
   addReview,
   removeReview,
+  flagEvent,
+  unflagEvent,
+  getFlagged,
+  getFlaggedComments,
+  flagComment,
+  adminRemoveEvent,
 };
