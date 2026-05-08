@@ -48,6 +48,10 @@
             {{#if isSaved}}Unsave Event{{else}}Save Event{{/if}}
           </button>
         </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-primary report-event-btn" data-id="{{event._id}}">Report Event</button>
+        </div>
       {{/if}}
 
       {{#if isOwner}}
@@ -96,6 +100,10 @@
         <div class="comment-card" data-id="{{this._id}}">
           <p><strong>{{this.userName}}</strong></p>
           <p>{{this.text}}</p>
+
+          {{#if ../isLoggedIn}}
+            <button type="button" class="btn-primary report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
+          {{/if}}
 
           {{#if ../isAdmin}}
             <button type="button" class="btn-primary delete-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Remove Comment</button>

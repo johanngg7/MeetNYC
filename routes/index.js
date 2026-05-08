@@ -10,6 +10,24 @@ const configRoutes = (app) => {
   app.use("/events", eventRoutes);
   app.use("/user", userRoutes);
   app.use("/admin", adminRoutes);
+
+  app.use((req, res) => {
+    res.status(404).render("error", {
+      title: "Page Not Found",
+      status: 404,
+      message: "Page not found.",
+    });
+  });
+
+  app.use((err, req, res, next) => {
+    const status = err.status || 500;
+    const message = status === 500 ? "Something went wrong." : err.message;
+    res.status(status).render("error", {
+      title: "Error",
+      status,
+      message,
+    });
+  });
 };
 
 module.exports = configRoutes;
