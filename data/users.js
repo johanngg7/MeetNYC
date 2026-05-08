@@ -91,11 +91,48 @@ const verify = async (email, password) => {
 };
 
 const update = async (id, updates) => {
-  throw new Error("Not implemented");
+  const ok = v.isId(id);
+  if (!updates || typeof updates !== "object") throw new Error("Updates required");
+
+  const set = {};
+  if (updates.firstName !== undefined) set.firstName = v.clean(v.isName(updates.firstName, "firstName"));
+  if (updates.lastName !== undefined) set.lastName = v.clean(v.isName(updates.lastName, "lastName"));
+  if (updates.email !== undefined) {
+    const em = v.isEmail(updates.email);
+    const col = await users();
+    const dup = await col.findOne({ email: em, _id: { $ne: new ObjectId(ok) } });
+    if (dup) throw new Error("Email already used");
+    set.email = em;
+  }
+  if (updates.handle !== undefined) {
+    const hd = v.isHandle(updates.handle);
+    const col = await users();
+    const dup = await col.findOne({ handle: hd, _id: { $ne: new ObjectId(ok) } });
+    if (dup) throw new Error("Handle already used");
+    set.handle = hd;
+  }
+  if (updates.borough !== undefined) set.borough = v.isBorough(updates.borough);
+  if (updates.password !== undefined) {
+    v.isPwd(updates.password);
+    set.hashedPassword = await bcrypt.hash(updates.password, SALT);
+  }
+
+  if (Object.keys(set).length === 0) throw new Error("No valid fields to update");
+
+  const col = await users();
+  const r = await col.updateOne({ _id: new ObjectId(ok) }, { $set: set });
+  if (r.matchedCount === 0) throw new Error("User not found");
+  return await getById(ok);
 };
 
 const remove = async (id) => {
-  throw new Error("Not implemented");
+  const ok = v.isId(id);
+  const col = await users();
+  const u = await col.findOne({ _id: new ObjectId(ok) });
+  if (!u) throw new Error("User not found");
+  const r = await col.deleteOne({ _id: new ObjectId(ok) });
+  if (r.deletedCount === 0) throw new Error("Failed to delete user");
+  return { _id: ok, deleted: true };
 };
 
 const lists = ["createdEvents", "rsvpedEvents", "savedEvents"];
