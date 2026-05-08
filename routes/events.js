@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const eventData = require("../data/events");
+const userData = require("../data/users");
 const { ensureAuthenticated } = require("../middleware/auth");
 
 router.get("/", async (req, res) => {
@@ -57,11 +58,17 @@ router.get("/:id", async (req, res) => {
     const isOwner = uid && ev.createdBy.toString() === uid;
     const isAttending =
       uid && (ev.attendees || []).some((a) => a.userId.toString() === uid);
+    let isSaved = false;
+    if (uid) {
+      const u = await userData.getById(uid);
+      isSaved = (u.savedEvents || []).some((e) => e.toString() === req.params.id);
+    }
     res.render("events/eventDetails", {
       title: ev.title,
       event: ev,
       isOwner,
       isAttending,
+      isSaved,
       attendeeCount: (ev.attendees || []).length,
     });
   } catch (e) {
@@ -108,6 +115,23 @@ router.post("/:id/delete", ensureAuthenticated, async (req, res) => {
     res.redirect("/events");
   } catch (e) {
     res.status(400).send(e.message);
+  }
+});
+
+router.post("/:id/save", ensureAuthenticated, async (req, res) => {
+  try {
+    const uid = req.session.user._id;
+    const u = await userData.getById(uid);
+    const saved = (u.savedEvents || []).some((e) => e.toString() === req.params.id);
+    if (saved) {
+      await userData.removeEventFrom(uid, "savedEvents", req.params.id);
+      return res.json({ status: "unsaved" });
+    }
+    await eventData.getById(req.params.id);
+    await userData.addEventTo(uid, "savedEvents", req.params.id);
+    return res.json({ status: "saved" });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
   }
 });
 
