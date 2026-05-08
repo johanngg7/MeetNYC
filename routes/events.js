@@ -4,14 +4,26 @@ const eventData = require("../data/events");
 const userData = require("../data/users");
 const { ensureAuthenticated } = require("../middleware/auth");
 
+const getSavedIds = async (req) => {
+  if (!req.session.user) return [];
+  const u = await userData.getById(req.session.user._id);
+  return (u.savedEvents || []).map((x) => x.toString());
+};
+
 router.get("/", async (req, res) => {
   try {
     const list = await eventData.getAll();
-    res.render("events/browseEvents", { title: "Browse Events", events: list });
+    const savedEventIds = await getSavedIds(req);
+    res.render("events/browseEvents", {
+      title: "Browse Events",
+      events: list,
+      savedEventIds,
+    });
   } catch (e) {
     res.status(500).render("events/browseEvents", {
       title: "Browse Events",
       events: [],
+      savedEventIds: [],
       error: e.message,
     });
   }
@@ -20,15 +32,18 @@ router.get("/", async (req, res) => {
 router.get("/search", async (req, res) => {
   try {
     const list = await eventData.search(req.query);
+    const savedEventIds = await getSavedIds(req);
     res.render("events/searchResults", {
       title: "Search Results",
       events: list,
       filters: req.query,
+      savedEventIds,
     });
   } catch (e) {
     res.status(400).render("events/searchResults", {
       title: "Search Results",
       events: [],
+      savedEventIds: [],
       error: e.message,
     });
   }
@@ -135,6 +150,15 @@ router.post("/:id/save", ensureAuthenticated, async (req, res) => {
   }
 });
 
+router.post("/:id/report", ensureAuthenticated, async (req, res) => {
+  try {
+    await eventData.flagEvent(req.params.id);
+    res.json({ reported: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 router.post("/:id/rsvp", ensureAuthenticated, async (req, res) => {
   try {
     const ev = await eventData.getById(req.params.id);
@@ -162,6 +186,15 @@ router.post("/:id/comments", ensureAuthenticated, async (req, res) => {
       req.body.comment
     );
     res.json({ comment: { ...cm, _id: cm._id.toString(), userId: cm.userId.toString() } });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post("/:id/comments/:cid/report", ensureAuthenticated, async (req, res) => {
+  try {
+    await eventData.flagComment(req.params.id, req.params.cid);
+    res.json({ reported: true });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

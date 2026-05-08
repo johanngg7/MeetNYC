@@ -16,6 +16,10 @@ app.engine(
     defaultLayout: "main",
     helpers: {
       eq: (a, b) => a === b,
+      hasId: (list, id) => {
+        if (!Array.isArray(list) || !id) return false;
+        return list.some((x) => x && x.toString() === id.toString());
+      },
     },
   })
 );
