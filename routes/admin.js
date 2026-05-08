@@ -58,6 +58,15 @@ router.post("/events/:id/comments/:cid/flag", ensureAuthenticated, ensureAdmin, 
   }
 });
 
+router.post("/events/:id/comments/:cid/unflag", ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    await eventData.unflagComment(req.params.id, req.params.cid);
+    res.json({ unflagged: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 router.post("/events/:id/comments/:cid/delete", ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     await eventData.removeComment(req.params.id, req.params.cid, req.session.user._id, true);

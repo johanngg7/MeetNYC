@@ -424,6 +424,14 @@ function initEventDetailsForms() {
       }
     });
   });
+
+  document.querySelectorAll(".report-event-btn").forEach(btn => {
+    btn.addEventListener("click", () => reportEvent(btn));
+  });
+
+  document.querySelectorAll(".report-comment-btn").forEach(btn => {
+    btn.addEventListener("click", () => reportComment(btn));
+  });
 }
 
 function initSaveButtons() {
@@ -497,6 +505,20 @@ function initDashboard() {
       }
     });
   });
+
+  document.querySelectorAll(".admin-unflag-comment").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const eid = btn.dataset.eventId;
+      const cid = btn.dataset.commentId;
+      try {
+        const res = await fetch("/admin/events/" + eid + "/comments/" + cid + "/unflag", { method: "POST" });
+        if (!res.ok) throw new Error("unflag failed");
+        btn.closest(".admin-item").remove();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
 }
 
 function initNavbar() {
@@ -505,7 +527,38 @@ function initNavbar() {
   });
 }
 
-function buildCommentNode(c, eid, isAdmin) {
+async function reportEvent(btn) {
+  if (!confirm("Report this event?")) return;
+  const eid = btn.dataset.id;
+  try {
+    const res = await fetch("/events/" + eid + "/report", { method: "POST" });
+    if (res.redirected) return window.location.href = res.url;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "report failed");
+    btn.textContent = "Reported";
+    btn.disabled = true;
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function reportComment(btn) {
+  if (!confirm("Report this comment?")) return;
+  const eid = btn.dataset.eid;
+  const cid = btn.dataset.cid;
+  try {
+    const res = await fetch("/events/" + eid + "/comments/" + cid + "/report", { method: "POST" });
+    if (res.redirected) return window.location.href = res.url;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "report failed");
+    btn.textContent = "Reported";
+    btn.disabled = true;
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
   const wrap = document.createElement("div");
   wrap.className = "comment-card";
   wrap.dataset.id = c._id;
@@ -517,6 +570,16 @@ function buildCommentNode(c, eid, isAdmin) {
   body.textContent = c.text;
   wrap.appendChild(name);
   wrap.appendChild(body);
+  if (isLoggedIn) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-primary report-comment-btn";
+    btn.dataset.cid = c._id;
+    btn.dataset.eid = eid;
+    btn.textContent = "Report Comment";
+    btn.addEventListener("click", () => reportComment(btn));
+    wrap.appendChild(btn);
+  }
   if (isAdmin) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -617,7 +680,8 @@ function initComments() {
       const empty = document.getElementById("commentEmpty");
       if (empty) empty.remove();
       const isAdmin = document.body.dataset.isAdmin === "true";
-      const node = buildCommentNode(data.comment, eid, isAdmin);
+      const isLoggedIn = document.body.dataset.isLoggedIn === "true";
+      const node = buildCommentNode(data.comment, eid, isAdmin, isLoggedIn);
       list.prepend(node);
       ta.value = "";
     } catch (err) {

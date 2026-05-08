@@ -4,6 +4,18 @@
     <div class="profile-header">
       <h1>{{user.firstName}} {{user.lastName}}</h1>
       <p class="profile-subtitle">@{{user.handle}} • {{user.borough}}</p>
+
+      <div class="form-actions">
+        <a href="/user/profile/edit" class="btn-primary btn-link">Edit Profile</a>
+      </div>
+
+      {{#unless isAdmin}}
+        <form action="/user/profile/delete" method="POST" class="event-form" novalidate>
+          <div class="form-actions">
+            <button type="submit" class="danger-btn">Delete Account</button>
+          </div>
+        </form>
+      {{/unless}}
     </div>
 
     <div class="profile-section">

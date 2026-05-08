@@ -556,17 +556,6 @@ textarea {
   margin-bottom: 12px;
 }
 
-.spots-left {
-  font-size: 14px;
-  font-weight: 700;
-  color: #111;
-  margin-bottom: 18px;
-}
-
-.spots-left.full {
-  color: #b42318;
-}
-
 .event-card-actions {
   display: flex;
   gap: 12px;
