@@ -1,16 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const eventData = require("../data/events");
+const userData = require("../data/users");
 const { ensureAuthenticated, ensureAdmin } = require("../middleware/auth");
 
 router.get("/", ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const flaggedEvents = await eventData.getFlagged();
     const flaggedComments = await eventData.getFlaggedComments();
+    const allUsers = await userData.getAll();
+    const users = allUsers.map(u => ({
+      ...u,
+      _id: u._id.toString(),
+      isSelf: u._id.toString() === req.session.user._id,
+    }));
     res.render("admin/dashboard", {
       title: "Admin Dashboard",
       flaggedEvents,
       flaggedComments,
+      users,
     });
   } catch (e) {
     res.status(500).render("admin/dashboard", {
@@ -71,6 +79,18 @@ router.post("/events/:id/comments/:cid/delete", ensureAuthenticated, ensureAdmin
   try {
     await eventData.removeComment(req.params.id, req.params.cid, req.session.user._id, true);
     res.json({ deleted: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post("/users/:id/toggle-admin", ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    if (req.params.id === req.session.user._id) {
+      return res.status(400).json({ error: "Cannot toggle your own admin status" });
+    }
+    const u = await userData.toggleAdmin(req.params.id);
+    res.json({ toggled: true, isAdmin: u.isAdmin });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
