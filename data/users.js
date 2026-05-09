@@ -180,6 +180,16 @@ const removeEventFromAll = async (eventId) => {
   return true;
 };
 
+const toggleAdmin = async (userId) => {
+  const ok = v.isId(userId);
+  const col = await users();
+  const u = await col.findOne({ _id: new ObjectId(ok) });
+  if (!u) throw new Error("User not found");
+  const newVal = !u.isAdmin;
+  await col.updateOne({ _id: new ObjectId(ok) }, { $set: { isAdmin: newVal } });
+  return { ...u, isAdmin: newVal, hashedPassword: undefined };
+};
+
 module.exports = {
   create,
   getAll,
@@ -192,4 +202,5 @@ module.exports = {
   addEventTo,
   removeEventFrom,
   removeEventFromAll,
+  toggleAdmin,
 };
