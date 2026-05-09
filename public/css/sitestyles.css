@@ -277,6 +277,50 @@ textarea {
   background: #c92a2a;
 }
 
+.detail-action {
+  width: 100%;
+}
+
+.report-btn {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.report-btn:hover {
+  background: #fed7aa;
+  color: #9a3412;
+}
+
+.compact-btn {
+  width: auto;
+  margin-right: 8px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.save-btn.saved {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #6ee7b7;
+}
+
+.save-btn.saved:hover {
+  background: #d1fae5;
+  color: #065f46;
+}
+
 
 @media (max-width: 1100px) {
   .hero-panel {
@@ -666,6 +710,19 @@ textarea {
   margin-top: 10px;
 }
 
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.profile-actions .event-form {
+  display: inline-flex;
+}
+
 .profile-section {
   margin-bottom: 50px;
 }
@@ -705,17 +762,35 @@ textarea {
   display: flex;
   gap: 10px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .danger-btn {
-  background: #e03131;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
 }
 
 .danger-btn:hover {
-  background: #c92a2a;
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.btn-primary:disabled,
+.secondary-btn:disabled,
+.report-btn:disabled,
+.danger-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
 }

@@ -50,34 +50,34 @@
         </form>
 
         <div class="form-actions">
-          <button type="button" class="btn-primary save-btn{{#if isSaved}} saved{{/if}}" data-id="{{event._id}}">
+          <button type="button" class="secondary-btn detail-action save-btn{{#if isSaved}} saved{{/if}}" data-id="{{event._id}}">
             {{#if isSaved}}Unsave Event{{else}}Save Event{{/if}}
           </button>
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn-primary report-event-btn" data-id="{{event._id}}">Report Event</button>
+          <button type="button" class="report-btn detail-action report-event-btn" data-id="{{event._id}}">Report Event</button>
         </div>
       {{/if}}
 
       {{#if isOwner}}
         <div class="form-actions">
-          <a href="/events/{{event._id}}/edit" class="btn-primary btn-link">Edit Event</a>
+          <a href="/events/{{event._id}}/edit" class="secondary-btn detail-action btn-link">Edit Event</a>
         </div>
 
         <form action="/events/{{event._id}}/delete" method="POST" class="event-form" novalidate>
           <div class="form-actions">
-            <button type="submit" class="btn-primary">Delete Event</button>
+            <button type="submit" class="danger-btn detail-action">Delete Event</button>
           </div>
         </form>
       {{/if}}
 
       {{#if isAdmin}}
         <div class="form-actions">
-          <button type="button" class="btn-primary admin-flag-btn" data-id="{{event._id}}">Flag Event</button>
+          <button type="button" class="report-btn detail-action admin-flag-btn" data-id="{{event._id}}">Flag Event</button>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-primary admin-remove-btn" data-id="{{event._id}}">Remove Event</button>
+          <button type="button" class="danger-btn detail-action admin-remove-btn" data-id="{{event._id}}">Remove Event</button>
         </div>
       {{/if}}
     </div>
@@ -108,11 +108,11 @@
           <p>{{this.text}}</p>
 
           {{#if ../isLoggedIn}}
-            <button type="button" class="btn-primary report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
+            <button type="button" class="report-btn compact-btn report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
           {{/if}}
 
           {{#if ../isAdmin}}
-            <button type="button" class="btn-primary delete-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Remove Comment</button>
+            <button type="button" class="danger-btn compact-btn delete-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Remove Comment</button>
           {{/if}}
         </div>
       {{/each}}
@@ -158,7 +158,7 @@
           <p>{{this.text}}</p>
 
           {{#if ../isAdmin}}
-            <button type="button" class="btn-primary delete-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Remove Review</button>
+            <button type="button" class="danger-btn compact-btn delete-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Remove Review</button>
           {{/if}}
         </div>
       {{/each}}

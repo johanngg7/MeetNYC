@@ -9,6 +9,10 @@
       <a href="/events/create">Create Event</a>
 
       {{#if isLoggedIn}}
+        <a href="/user/profile">Profile</a>
+        {{#if isAdmin}}
+          <a href="/admin">Admin</a>
+        {{/if}}
         <a href="/logout" class="login-btn">Logout</a>
       {{else}}
         <a href="/login" class="login-btn">Login</a>
