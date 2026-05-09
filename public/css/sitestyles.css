@@ -477,6 +477,16 @@ textarea {
   text-align: center;
 }
 
+.map-link {
+  color: #e03131;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.map-link:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 900px) {
   .event-details-card {
     flex-direction: column;

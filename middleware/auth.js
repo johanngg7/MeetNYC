@@ -10,7 +10,11 @@ const ensureNotAuthenticated = (req, res, next) => {
 
 const ensureAdmin = (req, res, next) => {
   if (req.session.user?.isAdmin === true) return next();
-  return res.status(403).send("Forbidden");
+  return res.status(403).render("error", {
+    title: "Forbidden",
+    status: 403,
+    message: "Forbidden",
+  });
 };
 
 module.exports = { ensureAuthenticated, ensureNotAuthenticated, ensureAdmin };

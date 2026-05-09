@@ -82,14 +82,24 @@ const isCategory = (s) => {
 const isDate = (s) => {
   const t = isStr(s, "date");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) throw new Error("date must be YYYY-MM-DD");
-  const d = new Date(t);
-  if (isNaN(d.getTime())) throw new Error("invalid date");
+  const parts = t.split("-");
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const day = Number(parts[2]);
+  const d = new Date(Date.UTC(y, m - 1, day));
+  if (
+    d.getUTCFullYear() !== y ||
+    d.getUTCMonth() !== m - 1 ||
+    d.getUTCDate() !== day
+  ) {
+    throw new Error("invalid date");
+  }
   return t;
 };
 
 const isTime = (s, name) => {
   const t = isStr(s, name);
-  if (!/^\d{2}:\d{2}$/.test(t)) throw new Error(name + " must be HH:MM");
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) throw new Error(name + " must be HH:MM");
   return t;
 };
 

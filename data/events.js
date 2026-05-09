@@ -5,6 +5,187 @@ const v = require("../helpers");
 
 const slots = ["morning", "afternoon", "evening", "night"];
 
+const imageSets = {
+  "Academic/Out of School time": [
+    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80",
+  ],
+  "Arts/Culture": [
+    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80",
+  ],
+  "Family Festival": [
+    "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
+  ],
+  Fitness: [
+    "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80",
+  ],
+  "Mobile Unit": [
+    "https://images.unsplash.com/photo-1519744792095-2f2205e87b6f?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1525186402429-b4ff38bedec6?auto=format&fit=crop&w=900&q=80",
+  ],
+  Performance: [
+    "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=900&q=80",
+  ],
+  Sport: [
+    "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=900&q=80",
+  ],
+};
+
+const titleImageSets = [
+  {
+    words: ["wedding"],
+    images: [
+      "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80",
+    ],
+  },
+  {
+    words: ["picnic"],
+    images: [
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=900&q=80",
+    ],
+  },
+  {
+    words: ["career", "school", "academic"],
+    images: [
+      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80",
+    ],
+  },
+  {
+    words: ["dance", "disco", "music", "concert"],
+    images: [
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=900&q=80",
+    ],
+  },
+  {
+    words: ["basketball", "pool", "pickle", "tournament", "run", "sport", "snl", "saturday night lights"],
+    images: [
+      "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=900&q=80",
+    ],
+  },
+];
+
+const boroughImages = {
+  Manhattan: [
+    "https://www.civitatis.com/f/estados-unidos/nueva-york/free-tour-midtown-manhattan-589x392.jpg",
+    "https://azure-na-images.contentstack.com/v3/assets/blt738d1897c3c93fa6/bltfa5d0fb785639f6f/685040c8f7cdb0fdfa0e6392/MG_1_1_New_York_City_1.webp",
+  ],
+  Brooklyn: [
+    "https://thumbs.6sqft.com/wp-content/uploads/2022/06/23011308/View_of_Manhattan_Bridge_from_Washington_Street_in_DUMBO_Brooklyn.jpg?w=1560&format=webp",
+    "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?auto=format&fit=crop&w=900&q=80",
+  ],
+  Queens: [
+    "https://blog.urbanadventures.com/wp-content/uploads/2018/07/resize-LIC-Julienne-Schaer_08-copy-2-e1532552058540.jpg",
+    "https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=900&q=80",
+  ],
+  Bronx: [
+    "https://www.nyctourism.com/_next/image/?url=https%3A%2F%2Fimages.ctfassets.net%2F1aemqu6a6t65%2F6ENKHSdVNw35xoA4YncFzz%2Fa64951cf51cf5acd9d68fe0f00cd9f7d%2FArthur_Avenue_Bronx_NYC_Photo_Lucia_Vazquez-201.jpg%3Fh%3D1280%26w%3D1920%26fit%3Dfill%26f%3Dcenter%26q%3D75%26fm%3Dwebp&w=3840&q=75",
+    "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=900&q=80",
+  ],
+  "Staten Island": [
+    "https://www.civitatis.com/f/estados-unidos/nueva-york/guia/staten-island-m.jpg",
+    "https://images.unsplash.com/photo-1523374228107-6e44bd2b524e?auto=format&fit=crop&w=900&q=80",
+  ],
+};
+
+const norm = (s) => {
+  if (!s) return "";
+  return s.toString().replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+};
+
+const keyText = (s) => norm(s).replace(/[^a-z0-9]+/g, "");
+
+const seriesText = (s) => {
+  return norm(s)
+    .split(" ")
+    .map((w) => {
+      if (w.length > 3 && w.endsWith("s")) return w.slice(0, -1);
+      return w;
+    })
+    .join("")
+    .replace(/[^a-z0-9]+/g, "");
+};
+
+const displayCategory = (ev) => {
+  const cat = ev.category || "";
+  if (v.categories.includes(cat)) return cat;
+  const txt = norm((ev.title || "") + " " + cat);
+  if (txt.includes("academic") || txt.includes("school") || txt.includes("career")) return "Academic/Out of School time";
+  if (txt.includes("family") || txt.includes("festival") || txt.includes("celebration") || txt.includes("picnic") || txt.includes("wedding") || txt.includes("special event")) return "Family Festival";
+  if (txt.includes("mobile")) return "Mobile Unit";
+  if (txt.includes("dance") || txt.includes("music") || txt.includes("concert") || txt.includes("jazz") || txt.includes("art") || txt.includes("culture")) return "Arts/Culture";
+  if (txt.includes("performance") || txt.includes("theater") || txt.includes("show")) return "Performance";
+  if (txt.includes("fitness") || txt.includes("run") || txt.includes("yoga") || txt.includes("walk")) return "Fitness";
+  if (txt.includes("sport") || txt.includes("pool") || txt.includes("pickle") || txt.includes("tournament") || txt.includes("saturday night lights") || txt.includes("snl")) return "Sport";
+  return cat || "Community";
+};
+
+const eventImage = (ev, pos) => {
+  if (ev.image) return ev.image;
+  if (Array.isArray(ev.photos) && ev.photos[0]) return ev.photos[0];
+  const txt = norm((ev.title || "") + " " + (ev.category || ""));
+  for (const item of titleImageSets) {
+    if (item.words.some((w) => txt.includes(w))) {
+      return item.images[pos % item.images.length];
+    }
+  }
+  const cat = displayCategory(ev);
+  const list = imageSets[cat] || boroughImages[ev.borough] || boroughImages.Manhattan;
+  return list[pos % list.length];
+};
+
+const eventLocation = (ev) => {
+  return ev.location || ev.venueName || "";
+};
+
+const eventMapUrl = (ev) => {
+  const loc = eventLocation(ev);
+  if (!loc) return "";
+  const q = [loc, ev.borough, "NYC"].filter(Boolean).join(", ");
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+};
+
+const prepEvent = (ev, pos) => {
+  if (!ev) return ev;
+  return {
+    ...ev,
+    displayCategory: displayCategory(ev),
+    image: eventImage(ev, pos),
+    locationText: eventLocation(ev),
+    mapUrl: eventMapUrl(ev),
+  };
+};
+
+const prepList = (list) => {
+  const seen = new Set();
+  const out = [];
+  for (const ev of list) {
+    const loc = ev.location || ev.venueName || "";
+    let k = keyText(ev.title) + "|" + ev.startDate + "|" + keyText(loc);
+    if (ev.creator === "NYC OpenData") {
+      k = seriesText(ev.title);
+    }
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(prepEvent(ev, out.length));
+  }
+  return out;
+};
+
 const inSlot = (time, slot) => {
   if (slot === "morning") return time >= "06:00" && time < "12:00";
   if (slot === "afternoon") return time >= "12:00" && time < "17:00";
@@ -68,7 +249,8 @@ const create = async (input, userId) => {
 
 const getAll = async () => {
   const col = await events();
-  return await col.find({}).sort({ startDate: 1 }).toArray();
+  const list = await col.find({}).sort({ startDate: 1 }).toArray();
+  return prepList(list);
 };
 
 const getById = async (id) => {
@@ -81,20 +263,20 @@ const getById = async (id) => {
     for (const r of ev.reviews) sum += Number(r.rating) || 0;
     ev.averageRating = (sum / ev.reviews.length).toFixed(1);
   }
-  return ev;
+  return prepEvent(ev);
 };
 
 const search = async (filters) => {
   const q = {};
   let slot = "";
+  let category = "";
   if (filters && typeof filters === "object") {
     if (filters.borough) {
       const b = v.isBorough(filters.borough);
       q.borough = b;
     }
     if (filters.category) {
-      const c = v.isCategory(filters.category);
-      q.category = c;
+      category = v.isCategory(filters.category);
     }
     if (filters.date) {
       const d = v.isDate(filters.date);
@@ -108,7 +290,8 @@ const search = async (filters) => {
   const col = await events();
   let list = await col.find(q).sort({ startDate: 1 }).toArray();
   if (slot) list = list.filter((ev) => inSlot(ev.startTime, slot));
-  return list;
+  if (category) list = list.filter((ev) => displayCategory(ev) === category);
+  return prepList(list);
 };
 
 const update = async (id, userId, input) => {
