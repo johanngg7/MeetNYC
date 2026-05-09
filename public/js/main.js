@@ -851,6 +851,24 @@ function initEventDetailsForms() {
   document.querySelectorAll(".report-comment-btn").forEach(btn => {
     btn.addEventListener("click", () => reportComment(btn));
   });
+
+  document.querySelectorAll(".admin-flag-comment-btn").forEach(btn => {
+    btn.addEventListener("click", () => flagCommentAsAdmin(btn));
+  });
+}
+
+async function flagCommentAsAdmin(btn) {
+  if (!confirm("Flag this comment?")) return;
+  const eid = btn.dataset.eid;
+  const cid = btn.dataset.cid;
+  try {
+    const res = await fetch("/admin/events/" + eid + "/comments/" + cid + "/flag", { method: "POST" });
+    if (!res.ok) throw new Error("flag failed");
+    btn.textContent = "Flagged";
+    btn.disabled = true;
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function initSaveButtons() {
@@ -989,7 +1007,25 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
   body.textContent = c.text;
   wrap.appendChild(name);
   wrap.appendChild(body);
-  if (isLoggedIn) {
+  if (isAdmin) {
+    const flagBtn = document.createElement("button");
+    flagBtn.type = "button";
+    flagBtn.className = "report-btn compact-btn admin-flag-comment-btn";
+    flagBtn.dataset.cid = c._id;
+    flagBtn.dataset.eid = eid;
+    flagBtn.textContent = "Flag Comment";
+    flagBtn.addEventListener("click", () => flagCommentAsAdmin(flagBtn));
+    wrap.appendChild(flagBtn);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "danger-btn compact-btn delete-comment-btn";
+    removeBtn.dataset.cid = c._id;
+    removeBtn.dataset.eid = eid;
+    removeBtn.textContent = "Remove Comment";
+    removeBtn.addEventListener("click", () => deleteComment(removeBtn));
+    wrap.appendChild(removeBtn);
+  } else if (isLoggedIn) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "report-btn compact-btn report-comment-btn";
@@ -997,16 +1033,6 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
     btn.dataset.eid = eid;
     btn.textContent = "Report Comment";
     btn.addEventListener("click", () => reportComment(btn));
-    wrap.appendChild(btn);
-  }
-  if (isAdmin) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "danger-btn compact-btn delete-comment-btn";
-    btn.dataset.cid = c._id;
-    btn.dataset.eid = eid;
-    btn.textContent = "Remove Comment";
-    btn.addEventListener("click", () => deleteComment(btn));
     wrap.appendChild(btn);
   }
   return wrap;
