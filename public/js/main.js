@@ -14,7 +14,89 @@ document.addEventListener("DOMContentLoaded", () => {
   initRsvp();
   initComments();
   initReviews();
+  initBackToTop();
+  initShare();
+  initImageSkeletons();
 });
+
+function initImageSkeletons() {
+  document.querySelectorAll(".event-image-wrap.loading").forEach((wrap) => {
+    const img = wrap.querySelector("img.event-image");
+    if (!img) {
+      wrap.classList.remove("loading");
+      return;
+    }
+    const reveal = () => wrap.classList.remove("loading");
+    if (img.complete && img.naturalWidth > 0) {
+      reveal();
+    } else {
+      img.addEventListener("load", reveal, { once: true });
+      img.addEventListener("error", reveal, { once: true });
+    }
+  });
+}
+
+function initShare() {
+  const btn = document.getElementById("shareBtn");
+  if (!btn) return;
+  const original = btn.textContent;
+
+  const fallbackCopy = (text) => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "absolute";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+    document.body.removeChild(ta);
+    return ok;
+  };
+
+  btn.addEventListener("click", async () => {
+    const url = window.location.href;
+    let copied = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch (_) {}
+    }
+    if (!copied) copied = fallbackCopy(url);
+
+    btn.textContent = copied ? "Link Copied!" : "Copy Failed";
+    btn.classList.toggle("share-success", copied);
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove("share-success");
+    }, 1800);
+  });
+}
+
+function initBackToTop() {
+  const btn = document.getElementById("backToTop");
+  if (!btn) return;
+  const SHOW_AFTER = 300;
+
+  const update = () => {
+    if (window.scrollY > SHOW_AFTER) {
+      btn.hidden = false;
+      btn.classList.add("visible");
+    } else {
+      btn.classList.remove("visible");
+      btn.hidden = true;
+    }
+  };
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", update, { passive: true });
+  update();
+}
 
 
 function initCounter() {
@@ -74,12 +156,83 @@ function initRsvp() {
       if (!res.ok) throw new Error(data.error || "rsvp failed");
       cnt.textContent = data.count;
       btn.textContent = data.status === "added" ? "Cancel RSVP" : "RSVP";
+      if (data.status === "added") fireConfetti(btn);
     } catch (err) {
       msg.textContent = err.message;
     } finally {
       btn.disabled = false;
     }
   });
+}
+
+function fireConfetti(originEl) {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "confetti-canvas";
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+
+  let originX = window.innerWidth / 2;
+  let originY = window.innerHeight / 3;
+  if (originEl) {
+    const r = originEl.getBoundingClientRect();
+    originX = r.left + r.width / 2;
+    originY = r.top + r.height / 2;
+  }
+
+  const colors = ["#e03131", "#f59f00", "#2f9e44", "#1c7ed6", "#ae3ec9", "#fab005"];
+  const particles = [];
+  for (let i = 0; i < 90; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 6 + Math.random() * 7;
+    particles.push({
+      x: originX,
+      y: originY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      size: 6 + Math.random() * 6,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1,
+    });
+  }
+
+  const gravity = 0.22;
+  const drag = 0.99;
+  const start = performance.now();
+
+  const tick = (now) => {
+    const elapsed = now - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach((p) => {
+      p.vx *= drag;
+      p.vy = p.vy * drag + gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.life = Math.max(0, 1 - elapsed / 1600);
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      ctx.restore();
+    });
+
+    if (elapsed < 1600) {
+      requestAnimationFrame(tick);
+    } else {
+      canvas.remove();
+    }
+  };
+  requestAnimationFrame(tick);
 }
 
 
