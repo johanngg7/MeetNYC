@@ -573,7 +573,7 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
   if (isLoggedIn) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn-primary report-comment-btn";
+    btn.className = "report-btn compact-btn report-comment-btn";
     btn.dataset.cid = c._id;
     btn.dataset.eid = eid;
     btn.textContent = "Report Comment";
@@ -583,7 +583,7 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
   if (isAdmin) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn-primary delete-comment-btn";
+    btn.className = "danger-btn compact-btn delete-comment-btn";
     btn.dataset.cid = c._id;
     btn.dataset.eid = eid;
     btn.textContent = "Remove Comment";
@@ -609,7 +609,7 @@ function buildReviewNode(r, eid, isAdmin) {
   if (isAdmin) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "btn-primary delete-review-btn";
+    btn.className = "danger-btn compact-btn delete-review-btn";
     btn.dataset.rid = r._id;
     btn.dataset.eid = eid;
     btn.textContent = "Remove Review";

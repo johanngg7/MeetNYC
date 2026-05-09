@@ -5,17 +5,15 @@
       <h1>{{user.firstName}} {{user.lastName}}</h1>
       <p class="profile-subtitle">@{{user.handle}} • {{user.borough}}</p>
 
-      <div class="form-actions">
-        <a href="/user/profile/edit" class="btn-primary btn-link">Edit Profile</a>
-      </div>
+      <div class="profile-actions">
+        <a href="/user/profile/edit" class="secondary-btn btn-link">Edit Profile</a>
 
-      {{#unless isAdmin}}
-        <form action="/user/profile/delete" method="POST" class="event-form" novalidate>
-          <div class="form-actions">
+        {{#unless isAdmin}}
+          <form action="/user/profile/delete" method="POST" class="event-form" novalidate>
             <button type="submit" class="danger-btn">Delete Account</button>
-          </div>
-        </form>
-      {{/unless}}
+          </form>
+        {{/unless}}
+      </div>
     </div>
 
     <div class="profile-section">
