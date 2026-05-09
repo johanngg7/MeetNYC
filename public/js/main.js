@@ -60,14 +60,19 @@ function initAddToCalendar() {
   if (!panel) return;
 
   btn.addEventListener("click", () => {
+    const decodeEntities = (s) => {
+      const ta = document.createElement("textarea");
+      ta.innerHTML = s;
+      return ta.value;
+    };
     const data = {
       id: panel.dataset.eventId || "",
-      title: panel.dataset.eventTitle || "MeetNYC Event",
-      location: panel.dataset.eventLocation || "",
+      title: decodeEntities(panel.dataset.eventTitle || "MeetNYC Event"),
+      location: decodeEntities(panel.dataset.eventLocation || ""),
       date: panel.dataset.eventDate || "",
       start: panel.dataset.eventStart || "",
       end: panel.dataset.eventEnd || "",
-      description: panel.dataset.eventDescription || "",
+      description: decodeEntities(panel.dataset.eventDescription || ""),
     };
 
     const dt = (date, time) => {

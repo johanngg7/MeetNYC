@@ -1250,7 +1250,10 @@ textarea {
 [data-theme="dark"] .event-side-panel h2,
 [data-theme="dark"] .event-comments-card h2,
 [data-theme="dark"] .event-reviews-card h2,
-[data-theme="dark"] .create-event-card h1 {
+[data-theme="dark"] .create-event-card h1,
+[data-theme="dark"] .profile-header h1,
+[data-theme="dark"] .profile-section h2,
+[data-theme="dark"] .search-results-header h1 {
   color: #ff6b6b;
 }
 
