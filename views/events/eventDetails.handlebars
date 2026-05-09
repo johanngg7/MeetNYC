@@ -122,12 +122,13 @@
           <p><strong>{{this.userName}}</strong></p>
           <p>{{this.text}}</p>
 
-          {{#if ../isLoggedIn}}
-            <button type="button" class="report-btn compact-btn report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
-          {{/if}}
-
           {{#if ../isAdmin}}
+            <button type="button" class="report-btn compact-btn admin-flag-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Flag Comment</button>
             <button type="button" class="danger-btn compact-btn delete-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Remove Comment</button>
+          {{else}}
+            {{#if ../isLoggedIn}}
+              <button type="button" class="report-btn compact-btn report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
+            {{/if}}
           {{/if}}
         </div>
       {{/each}}

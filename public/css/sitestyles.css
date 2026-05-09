@@ -1014,6 +1014,33 @@ textarea {
   color: #e7ecf2;
 }
 
+[data-theme="dark"] .admin-item {
+  background: #232c36;
+  border-color: #2c3742;
+  color: #e7ecf2;
+}
+
+[data-theme="dark"] .admin-item a {
+  color: #ff6b6b;
+}
+
+[data-theme="dark"] .admin-item a:hover {
+  color: #ffa8a8;
+}
+
+[data-theme="dark"] .section-block h1,
+[data-theme="dark"] .details-content-card h2 {
+  color: #ff6b6b;
+}
+
+[data-theme="dark"] .empty-text {
+  color: #9aa6b2;
+}
+
+[data-theme="dark"] .error-text {
+  color: #ff6b6b;
+}
+
 .confetti-canvas {
   position: fixed;
   inset: 0;
