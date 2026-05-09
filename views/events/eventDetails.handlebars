@@ -39,6 +39,10 @@
 
       <p><strong>Average Rating:</strong> <span id="averageRating">{{#if event.averageRating}}{{event.averageRating}} / 5{{else}}No reviews{{/if}}</span></p>
 
+      <div class="form-actions">
+        <button type="button" id="shareBtn" class="secondary-btn detail-action share-btn">Share Event</button>
+      </div>
+
       {{#if isLoggedIn}}
         <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
           <div class="form-actions">
