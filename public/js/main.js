@@ -17,7 +17,204 @@ document.addEventListener("DOMContentLoaded", () => {
   initBackToTop();
   initShare();
   initImageSkeletons();
+  initThemeToggle();
+  initCardEmojiBurst();
+  initDiscoverDice();
+  initAddToCalendar();
+  initSearchHistory();
+  initSortDropdown();
 });
+
+function initSortDropdown() {
+  const sel = document.getElementById("sortEvents");
+  const grid = document.querySelector(".event-grid");
+  if (!sel || !grid) return;
+
+  const cards = Array.from(grid.querySelectorAll(".event-card"));
+  if (!cards.length) return;
+
+  const numeric = (el, attr) => Number(el.dataset[attr]) || 0;
+  const dateOf = (el) => el.dataset.date || "";
+
+  const sorters = {
+    "date-asc":       (a, b) => dateOf(a).localeCompare(dateOf(b)),
+    "date-desc":      (a, b) => dateOf(b).localeCompare(dateOf(a)),
+    "attendees-desc": (a, b) => numeric(b, "attendees") - numeric(a, "attendees"),
+    "rating-desc":    (a, b) => numeric(b, "rating")    - numeric(a, "rating"),
+  };
+
+  sel.addEventListener("change", () => {
+    const fn = sorters[sel.value];
+    if (!fn) return;
+    const sorted = cards.slice().sort(fn);
+    const frag = document.createDocumentFragment();
+    sorted.forEach((c) => frag.appendChild(c));
+    grid.appendChild(frag);
+  });
+}
+
+function initAddToCalendar() {
+  const btn = document.getElementById("calendarBtn");
+  if (!btn) return;
+  const panel = document.querySelector(".event-side-panel");
+  if (!panel) return;
+
+  btn.addEventListener("click", () => {
+    const data = {
+      id: panel.dataset.eventId || "",
+      title: panel.dataset.eventTitle || "MeetNYC Event",
+      location: panel.dataset.eventLocation || "",
+      date: panel.dataset.eventDate || "",
+      start: panel.dataset.eventStart || "",
+      end: panel.dataset.eventEnd || "",
+      description: panel.dataset.eventDescription || "",
+    };
+
+    const dt = (date, time) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+      const tm = /^(\d{2}):(\d{2})$/.exec(time);
+      if (!m || !tm) return null;
+      return m[1] + m[2] + m[3] + "T" + tm[1] + tm[2] + "00";
+    };
+    const dtStart = dt(data.date, data.start);
+    const dtEnd   = dt(data.date, data.end);
+    if (!dtStart || !dtEnd) {
+      alert("Event time data is incomplete; cannot create calendar file.");
+      return;
+    }
+
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    const escape = (s) => String(s).replace(/[\\;,]/g, (c) => "\\" + c).replace(/\r?\n/g, "\\n");
+    const TZID = "America/New_York";
+
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//MeetNYC//EN",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VTIMEZONE",
+      "TZID:" + TZID,
+      "BEGIN:DAYLIGHT",
+      "TZOFFSETFROM:-0500",
+      "TZOFFSETTO:-0400",
+      "TZNAME:EDT",
+      "DTSTART:19700308T020000",
+      "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+      "END:DAYLIGHT",
+      "BEGIN:STANDARD",
+      "TZOFFSETFROM:-0400",
+      "TZOFFSETTO:-0500",
+      "TZNAME:EST",
+      "DTSTART:19701101T020000",
+      "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "UID:" + (data.id || stamp) + "@meetnyc",
+      "DTSTAMP:" + stamp,
+      "DTSTART;TZID=" + TZID + ":" + dtStart,
+      "DTEND;TZID="   + TZID + ":" + dtEnd,
+      "SUMMARY:" + escape(data.title),
+      "LOCATION:" + escape(data.location),
+      "DESCRIPTION:" + escape(data.description),
+      "URL:" + window.location.href,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ];
+    const ics = lines.join("\r\n");
+
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeName = data.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "event";
+    a.href = url;
+    a.download = "meetnyc-" + safeName + ".ics";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+
+    const original = btn.textContent;
+    btn.textContent = "Calendar File Saved";
+    btn.classList.add("calendar-success");
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove("calendar-success");
+    }, 1800);
+  });
+}
+
+function initDiscoverDice() {
+  const dice = document.getElementById("discoverDice");
+  if (!dice) return;
+  const path = window.location.pathname.replace(/\/+$/, "");
+  if (path !== "/events") return;
+  const SHOW_AFTER = 300;
+
+  const update = () => {
+    if (window.scrollY > SHOW_AFTER) {
+      dice.hidden = false;
+      dice.classList.add("visible");
+    } else {
+      dice.classList.remove("visible");
+      dice.hidden = true;
+    }
+  };
+
+  window.addEventListener("scroll", update, { passive: true });
+  update();
+}
+
+function initCardEmojiBurst() {
+  const cards = document.querySelectorAll(".event-card");
+  if (!cards.length) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const emojis = ["❤️", "🎉", "🗽", "🎊", "✨", "🌃", "🚀", "🙌"];
+
+  cards.forEach((card) => {
+    card.addEventListener("dblclick", (e) => {
+      const target = e.target.closest("a, button");
+      if (target) return;
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const span = document.createElement("span");
+      span.className = "float-emoji";
+      span.textContent = emoji;
+      span.style.left = e.clientX + "px";
+      span.style.top = e.clientY + "px";
+      document.body.appendChild(span);
+      span.addEventListener("animationend", () => span.remove(), { once: true });
+    });
+  });
+}
+
+function initThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+  const icon = btn.querySelector(".theme-icon");
+  const SUN = "☀";
+  const MOON = "☾";
+
+  const sync = () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    btn.setAttribute("aria-pressed", isDark ? "true" : "false");
+    btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+    if (icon) icon.textContent = isDark ? MOON : SUN;
+  };
+
+  sync();
+
+  btn.addEventListener("click", () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    if (isDark) {
+      document.documentElement.removeAttribute("data-theme");
+      try { localStorage.setItem("meetnyc-theme", "light"); } catch (_) {}
+    } else {
+      document.documentElement.setAttribute("data-theme", "dark");
+      try { localStorage.setItem("meetnyc-theme", "dark"); } catch (_) {}
+    }
+    sync();
+  });
+}
 
 function initImageSkeletons() {
   document.querySelectorAll(".event-image-wrap.loading").forEach((wrap) => {
@@ -134,8 +331,77 @@ function initSearch() {
     }
 
     if (err) err.textContent = "";
+    saveSearchToHistory(params);
     window.location.href = "/events/search?" + params.toString();
   });
+}
+
+const SEARCH_HISTORY_KEY = "meetnyc-search-history";
+const SEARCH_HISTORY_MAX = 5;
+
+function readSearchHistory() {
+  try {
+    const raw = sessionStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveSearchToHistory(params) {
+  const qs = params.toString();
+  if (!qs) return;
+  let history = readSearchHistory().filter((h) => h.qs !== qs);
+  const label = buildHistoryLabel(params);
+  history.unshift({ qs, label });
+  history = history.slice(0, SEARCH_HISTORY_MAX);
+  try {
+    sessionStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  } catch (_) {}
+}
+
+function buildHistoryLabel(params) {
+  const parts = [];
+  for (const [, val] of params.entries()) {
+    parts.push(val);
+  }
+  return parts.join(" • ");
+}
+
+function initSearchHistory() {
+  const wrap = document.getElementById("searchHistory");
+  const list = document.getElementById("searchHistoryChips");
+  const clear = document.getElementById("searchHistoryClear");
+  if (!wrap || !list || !clear) return;
+
+  const render = () => {
+    const history = readSearchHistory();
+    list.innerHTML = "";
+    if (!history.length) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    history.forEach((h) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "search-chip";
+      chip.textContent = h.label;
+      chip.addEventListener("click", () => {
+        window.location.href = "/events/search?" + h.qs;
+      });
+      list.appendChild(chip);
+    });
+  };
+
+  clear.addEventListener("click", () => {
+    try { sessionStorage.removeItem(SEARCH_HISTORY_KEY); } catch (_) {}
+    render();
+  });
+
+  render();
 }
 
 function initRsvp() {

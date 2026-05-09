@@ -1,6 +1,15 @@
 <section class="browse-events-page">
 
   {{#if events.length}}
+    <div class="event-grid-toolbar">
+      <label for="sortEvents" class="sort-label">Sort by</label>
+      <select id="sortEvents" class="sort-select">
+        <option value="date-asc">Date (soonest first)</option>
+        <option value="date-desc">Date (latest first)</option>
+        <option value="attendees-desc">Most attendees</option>
+        <option value="rating-desc">Highest rated</option>
+      </select>
+    </div>
     <div class="event-grid">
       {{#each events}}
         {{> eventCard}}
