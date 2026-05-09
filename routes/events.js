@@ -87,10 +87,10 @@ router.get("/:id", async (req, res) => {
       attendeeCount: (ev.attendees || []).length,
     });
   } catch (e) {
-    res.status(404).render("events/eventDetails", {
-      title: "Event",
-      event: null,
-      error: e.message,
+    res.status(404).render("error", {
+      title: "Event Not Found",
+      status: 404,
+      message: e.message,
     });
   }
 });
@@ -99,11 +99,19 @@ router.get("/:id/edit", ensureAuthenticated, async (req, res) => {
   try {
     const ev = await eventData.getById(req.params.id);
     if (ev.createdBy.toString() !== req.session.user._id) {
-      return res.status(403).send("Forbidden");
+      return res.status(403).render("error", {
+        title: "Forbidden",
+        status: 403,
+        message: "Forbidden",
+      });
     }
     res.render("events/editEvent", { title: "Edit Event", event: ev });
   } catch (e) {
-    res.status(404).send(e.message);
+    res.status(404).render("error", {
+      title: "Event Not Found",
+      status: 404,
+      message: e.message,
+    });
   }
 });
 
@@ -129,7 +137,11 @@ router.post("/:id/delete", ensureAuthenticated, async (req, res) => {
     await eventData.remove(req.params.id, req.session.user._id);
     res.redirect("/events");
   } catch (e) {
-    res.status(400).send(e.message);
+    res.status(400).render("error", {
+      title: "Error",
+      status: 400,
+      message: e.message,
+    });
   }
 });
 

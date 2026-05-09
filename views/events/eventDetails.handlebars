@@ -10,8 +10,14 @@
       <p class="subtitle">Discover and join this NYC event</p>
 
       <div class="event-info">
-        <p><strong>Category:</strong> {{event.category}}</p>
+        <p><strong>Category:</strong> {{#if event.displayCategory}}{{event.displayCategory}}{{else}}{{event.category}}{{/if}}</p>
         <p><strong>Borough:</strong> {{event.borough}}</p>
+        {{#if event.locationText}}
+          <p><strong>Location:</strong> {{event.locationText}}</p>
+          {{#if event.mapUrl}}
+            <p><a href="{{event.mapUrl}}" target="_blank" rel="noopener" class="map-link">Open in Maps</a></p>
+          {{/if}}
+        {{/if}}
         <p><strong>Date:</strong> {{event.startDate}}</p>
         <p><strong>Start Time:</strong> {{event.startTime}}</p>
         <p><strong>End Time:</strong> {{event.endTime}}</p>
