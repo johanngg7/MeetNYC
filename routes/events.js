@@ -66,6 +66,17 @@ router.post("/create", ensureAuthenticated, async (req, res) => {
   }
 });
 
+router.get("/random", async (req, res) => {
+  try {
+    const list = await eventData.getAll();
+    if (!list || list.length === 0) return res.redirect("/events");
+    const pick = list[Math.floor(Math.random() * list.length)];
+    res.redirect("/events/" + pick._id.toString());
+  } catch (e) {
+    res.redirect("/events");
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const ev = await eventData.getById(req.params.id);

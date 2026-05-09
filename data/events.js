@@ -161,12 +161,22 @@ const eventMapUrl = (ev) => {
 
 const prepEvent = (ev, pos) => {
   if (!ev) return ev;
+  const attendees = ev.attendees || [];
+  const reviews = ev.reviews || [];
+  let averageRating = 0;
+  if (reviews.length > 0) {
+    let sum = 0;
+    for (const r of reviews) sum += Number(r.rating) || 0;
+    averageRating = Number((sum / reviews.length).toFixed(1));
+  }
   return {
     ...ev,
     displayCategory: displayCategory(ev),
     image: eventImage(ev, pos),
     locationText: eventLocation(ev),
     mapUrl: eventMapUrl(ev),
+    attendeeCount: attendees.length,
+    averageRating,
   };
 };
 

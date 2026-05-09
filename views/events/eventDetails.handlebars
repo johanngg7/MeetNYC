@@ -32,7 +32,14 @@
       </div>
     </div>
 
-    <div class="event-side-panel">
+    <div class="event-side-panel"
+         data-event-id="{{event._id}}"
+         data-event-title="{{event.title}}"
+         data-event-location="{{#if event.locationText}}{{event.locationText}}{{else}}{{event.borough}}{{/if}}"
+         data-event-date="{{event.startDate}}"
+         data-event-start="{{event.startTime}}"
+         data-event-end="{{event.endTime}}"
+         data-event-description="{{event.description}}">
       <h2>Event Actions</h2>
 
       <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span></p>
@@ -41,6 +48,10 @@
 
       <div class="form-actions">
         <button type="button" id="shareBtn" class="secondary-btn detail-action share-btn">Share Event</button>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="calendarBtn" class="secondary-btn detail-action calendar-btn">Add to Calendar</button>
       </div>
 
       {{#if isLoggedIn}}
