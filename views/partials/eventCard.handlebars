@@ -16,6 +16,11 @@
     {{/if}}
 
     <span class="badge">{{borough}}</span>
+    {{#if attendanceCap}}
+      <span class="cap-badge {{#if isFull}}is-full{{/if}}">
+        {{#if isFull}}Full{{else}}{{spotsLeft}} left{{/if}}
+      </span>
+    {{/if}}
   </div>
 
   <div class="event-card-body">

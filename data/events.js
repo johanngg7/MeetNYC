@@ -169,6 +169,8 @@ const prepEvent = (ev, pos) => {
     for (const r of reviews) sum += Number(r.rating) || 0;
     averageRating = Number((sum / reviews.length).toFixed(1));
   }
+  const cap = (typeof ev.attendanceCap === "number" && ev.attendanceCap > 0) ? ev.attendanceCap : null;
+  const spotsLeft = cap === null ? null : Math.max(0, cap - attendees.length);
   return {
     ...ev,
     displayCategory: displayCategory(ev),
@@ -177,6 +179,9 @@ const prepEvent = (ev, pos) => {
     mapUrl: eventMapUrl(ev),
     attendeeCount: attendees.length,
     averageRating,
+    attendanceCap: cap,
+    spotsLeft,
+    isFull: cap !== null && spotsLeft === 0,
   };
 };
 
@@ -222,6 +227,11 @@ const create = async (input, userId) => {
     description = v.isLen(input.description, "description", 1, 300);
   }
 
+  let attendanceCap = null;
+  if (input.attendanceCap !== undefined && input.attendanceCap !== null && String(input.attendanceCap).trim() !== "") {
+    attendanceCap = v.isPosInt(input.attendanceCap, "attendanceCap", 100000);
+  }
+
   const u = await userData.getById(uid);
   const creator = u.firstName + " " + u.lastName;
 
@@ -245,6 +255,7 @@ const create = async (input, userId) => {
     comments: [],
     reviews: [],
     attendees: [],
+    attendanceCap,
     createdAt: new Date(),
   };
 
@@ -274,6 +285,22 @@ const getById = async (id) => {
     ev.averageRating = (sum / ev.reviews.length).toFixed(1);
   }
   return prepEvent(ev);
+};
+
+const getSimilar = async (id, limit) => {
+  const ok = v.isId(id);
+  const max = typeof limit === "number" && limit > 0 ? Math.min(limit, 12) : 4;
+  const col = await events();
+  const self = await col.findOne({ _id: new ObjectId(ok) });
+  if (!self) return [];
+  const list = await col.find({
+    _id: { $ne: new ObjectId(ok) },
+    $or: [
+      { borough: self.borough },
+      { category: self.category },
+    ],
+  }).sort({ startDate: 1 }).limit(max * 3).toArray();
+  return prepList(list).slice(0, max);
 };
 
 const search = async (filters) => {
@@ -328,6 +355,15 @@ const update = async (id, userId, input) => {
     description = v.isLen(input.description, "description", 1, 300);
   }
 
+  let attendanceCap = null;
+  if (input.attendanceCap !== undefined && input.attendanceCap !== null && String(input.attendanceCap).trim() !== "") {
+    attendanceCap = v.isPosInt(input.attendanceCap, "attendanceCap", 100000);
+    const currentCount = (ev.attendees || []).length;
+    if (attendanceCap < currentCount) {
+      throw new Error("attendanceCap cannot be less than current attendees (" + currentCount + ")");
+    }
+  }
+
   const set = {
     title: v.clean(title),
     description: v.clean(description),
@@ -339,6 +375,7 @@ const update = async (id, userId, input) => {
     endDate: date,
     startTime,
     endTime,
+    attendanceCap,
   };
 
   const r = await col.updateOne({ _id: new ObjectId(ok) }, { $set: set });
@@ -373,6 +410,10 @@ const addAttendee = async (eventId, userId, userName) => {
 
   const already = (ev.attendees || []).some((a) => a.userId.toString() === uid);
   if (already) throw new Error("Already attending");
+
+  if (typeof ev.attendanceCap === "number" && ev.attendanceCap > 0 && (ev.attendees || []).length >= ev.attendanceCap) {
+    throw new Error("Event is full");
+  }
 
   const att = {
     _id: new ObjectId(),
@@ -599,6 +640,7 @@ module.exports = {
   create,
   getAll,
   getById,
+  getSimilar,
   search,
   update,
   remove,
