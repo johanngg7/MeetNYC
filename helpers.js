@@ -103,6 +103,17 @@ const isTime = (s, name) => {
   return t;
 };
 
+const isPosInt = (val, name, max) => {
+  const n = typeof val === "string" ? Number(val.trim()) : Number(val);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
+    throw new Error(name + " must be a positive integer");
+  }
+  if (typeof max === "number" && n > max) {
+    throw new Error(name + " must be at most " + max);
+  }
+  return n;
+};
+
 module.exports = {
   isStr,
   isName,
@@ -115,6 +126,7 @@ module.exports = {
   isCategory,
   isDate,
   isTime,
+  isPosInt,
   clean,
   boroughs,
   categories,

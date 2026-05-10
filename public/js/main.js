@@ -14,7 +14,291 @@ document.addEventListener("DOMContentLoaded", () => {
   initRsvp();
   initComments();
   initReviews();
+  initBackToTop();
+  initShare();
+  initImageSkeletons();
+  initThemeToggle();
+  initCardEmojiBurst();
+  initDiscoverDice();
+  initAddToCalendar();
+  initSearchHistory();
+  initSortDropdown();
 });
+
+function initSortDropdown() {
+  const sel = document.getElementById("sortEvents");
+  const grid = document.querySelector(".event-grid");
+  if (!sel || !grid) return;
+
+  const cards = Array.from(grid.querySelectorAll(".event-card"));
+  if (!cards.length) return;
+
+  const numeric = (el, attr) => Number(el.dataset[attr]) || 0;
+  const dateOf = (el) => el.dataset.date || "";
+
+  const sorters = {
+    "date-asc":       (a, b) => dateOf(a).localeCompare(dateOf(b)),
+    "date-desc":      (a, b) => dateOf(b).localeCompare(dateOf(a)),
+    "attendees-desc": (a, b) => numeric(b, "attendees") - numeric(a, "attendees"),
+    "rating-desc":    (a, b) => numeric(b, "rating")    - numeric(a, "rating"),
+  };
+
+  sel.addEventListener("change", () => {
+    const fn = sorters[sel.value];
+    if (!fn) return;
+    const sorted = cards.slice().sort(fn);
+    const frag = document.createDocumentFragment();
+    sorted.forEach((c) => frag.appendChild(c));
+    grid.appendChild(frag);
+  });
+}
+
+function initAddToCalendar() {
+  const btn = document.getElementById("calendarBtn");
+  if (!btn) return;
+  const panel = document.querySelector(".event-side-panel");
+  if (!panel) return;
+
+  btn.addEventListener("click", () => {
+    const decodeEntities = (s) => {
+      const ta = document.createElement("textarea");
+      ta.innerHTML = s;
+      return ta.value;
+    };
+    const data = {
+      id: panel.dataset.eventId || "",
+      title: decodeEntities(panel.dataset.eventTitle || "MeetNYC Event"),
+      location: decodeEntities(panel.dataset.eventLocation || ""),
+      date: panel.dataset.eventDate || "",
+      start: panel.dataset.eventStart || "",
+      end: panel.dataset.eventEnd || "",
+      description: decodeEntities(panel.dataset.eventDescription || ""),
+    };
+
+    const dt = (date, time) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+      const tm = /^(\d{2}):(\d{2})$/.exec(time);
+      if (!m || !tm) return null;
+      return m[1] + m[2] + m[3] + "T" + tm[1] + tm[2] + "00";
+    };
+    const dtStart = dt(data.date, data.start);
+    const dtEnd   = dt(data.date, data.end);
+    if (!dtStart || !dtEnd) {
+      alert("Event time data is incomplete; cannot create calendar file.");
+      return;
+    }
+
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    const escape = (s) => String(s).replace(/[\\;,]/g, (c) => "\\" + c).replace(/\r?\n/g, "\\n");
+    const TZID = "America/New_York";
+
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//MeetNYC//EN",
+      "CALSCALE:GREGORIAN",
+      "BEGIN:VTIMEZONE",
+      "TZID:" + TZID,
+      "BEGIN:DAYLIGHT",
+      "TZOFFSETFROM:-0500",
+      "TZOFFSETTO:-0400",
+      "TZNAME:EDT",
+      "DTSTART:19700308T020000",
+      "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+      "END:DAYLIGHT",
+      "BEGIN:STANDARD",
+      "TZOFFSETFROM:-0400",
+      "TZOFFSETTO:-0500",
+      "TZNAME:EST",
+      "DTSTART:19701101T020000",
+      "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+      "END:STANDARD",
+      "END:VTIMEZONE",
+      "BEGIN:VEVENT",
+      "UID:" + (data.id || stamp) + "@meetnyc",
+      "DTSTAMP:" + stamp,
+      "DTSTART;TZID=" + TZID + ":" + dtStart,
+      "DTEND;TZID="   + TZID + ":" + dtEnd,
+      "SUMMARY:" + escape(data.title),
+      "LOCATION:" + escape(data.location),
+      "DESCRIPTION:" + escape(data.description),
+      "URL:" + window.location.href,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ];
+    const ics = lines.join("\r\n");
+
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeName = data.title.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "event";
+    a.href = url;
+    a.download = "meetnyc-" + safeName + ".ics";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+
+    const original = btn.textContent;
+    btn.textContent = "Calendar File Saved";
+    btn.classList.add("calendar-success");
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove("calendar-success");
+    }, 1800);
+  });
+}
+
+function initDiscoverDice() {
+  const dice = document.getElementById("discoverDice");
+  if (!dice) return;
+  const path = window.location.pathname.replace(/\/+$/, "");
+  if (path !== "/events") return;
+  const SHOW_AFTER = 300;
+
+  const update = () => {
+    if (window.scrollY > SHOW_AFTER) {
+      dice.hidden = false;
+      dice.classList.add("visible");
+    } else {
+      dice.classList.remove("visible");
+      dice.hidden = true;
+    }
+  };
+
+  window.addEventListener("scroll", update, { passive: true });
+  update();
+}
+
+function initCardEmojiBurst() {
+  const cards = document.querySelectorAll(".event-card");
+  if (!cards.length) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const emojis = ["❤️", "🎉", "🗽", "🎊", "✨", "🌃", "🚀", "🙌"];
+
+  cards.forEach((card) => {
+    card.addEventListener("dblclick", (e) => {
+      const target = e.target.closest("a, button");
+      if (target) return;
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const span = document.createElement("span");
+      span.className = "float-emoji";
+      span.textContent = emoji;
+      span.style.left = e.clientX + "px";
+      span.style.top = e.clientY + "px";
+      document.body.appendChild(span);
+      span.addEventListener("animationend", () => span.remove(), { once: true });
+    });
+  });
+}
+
+function initThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+  const icon = btn.querySelector(".theme-icon");
+  const SUN = "☀";
+  const MOON = "☾";
+
+  const sync = () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    btn.setAttribute("aria-pressed", isDark ? "true" : "false");
+    btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+    if (icon) icon.textContent = isDark ? MOON : SUN;
+  };
+
+  sync();
+
+  btn.addEventListener("click", () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    if (isDark) {
+      document.documentElement.removeAttribute("data-theme");
+      try { localStorage.setItem("meetnyc-theme", "light"); } catch (_) {}
+    } else {
+      document.documentElement.setAttribute("data-theme", "dark");
+      try { localStorage.setItem("meetnyc-theme", "dark"); } catch (_) {}
+    }
+    sync();
+  });
+}
+
+function initImageSkeletons() {
+  document.querySelectorAll(".event-image-wrap.loading").forEach((wrap) => {
+    const img = wrap.querySelector("img.event-image");
+    if (!img) {
+      wrap.classList.remove("loading");
+      return;
+    }
+    const reveal = () => wrap.classList.remove("loading");
+    if (img.complete && img.naturalWidth > 0) {
+      reveal();
+    } else {
+      img.addEventListener("load", reveal, { once: true });
+      img.addEventListener("error", reveal, { once: true });
+    }
+  });
+}
+
+function initShare() {
+  const btn = document.getElementById("shareBtn");
+  if (!btn) return;
+  const original = btn.textContent;
+
+  const fallbackCopy = (text) => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "absolute";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+    document.body.removeChild(ta);
+    return ok;
+  };
+
+  btn.addEventListener("click", async () => {
+    const url = window.location.href;
+    let copied = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        copied = true;
+      } catch (_) {}
+    }
+    if (!copied) copied = fallbackCopy(url);
+
+    btn.textContent = copied ? "Link Copied!" : "Copy Failed";
+    btn.classList.toggle("share-success", copied);
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove("share-success");
+    }, 1800);
+  });
+}
+
+function initBackToTop() {
+  const btn = document.getElementById("backToTop");
+  if (!btn) return;
+  const SHOW_AFTER = 300;
+
+  const update = () => {
+    if (window.scrollY > SHOW_AFTER) {
+      btn.hidden = false;
+      btn.classList.add("visible");
+    } else {
+      btn.classList.remove("visible");
+      btn.hidden = true;
+    }
+  };
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", update, { passive: true });
+  update();
+}
 
 
 function initCounter() {
@@ -52,8 +336,77 @@ function initSearch() {
     }
 
     if (err) err.textContent = "";
+    saveSearchToHistory(params);
     window.location.href = "/events/search?" + params.toString();
   });
+}
+
+const SEARCH_HISTORY_KEY = "meetnyc-search-history";
+const SEARCH_HISTORY_MAX = 5;
+
+function readSearchHistory() {
+  try {
+    const raw = sessionStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveSearchToHistory(params) {
+  const qs = params.toString();
+  if (!qs) return;
+  let history = readSearchHistory().filter((h) => h.qs !== qs);
+  const label = buildHistoryLabel(params);
+  history.unshift({ qs, label });
+  history = history.slice(0, SEARCH_HISTORY_MAX);
+  try {
+    sessionStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  } catch (_) {}
+}
+
+function buildHistoryLabel(params) {
+  const parts = [];
+  for (const [, val] of params.entries()) {
+    parts.push(val);
+  }
+  return parts.join(" • ");
+}
+
+function initSearchHistory() {
+  const wrap = document.getElementById("searchHistory");
+  const list = document.getElementById("searchHistoryChips");
+  const clear = document.getElementById("searchHistoryClear");
+  if (!wrap || !list || !clear) return;
+
+  const render = () => {
+    const history = readSearchHistory();
+    list.innerHTML = "";
+    if (!history.length) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    history.forEach((h) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "search-chip";
+      chip.textContent = h.label;
+      chip.addEventListener("click", () => {
+        window.location.href = "/events/search?" + h.qs;
+      });
+      list.appendChild(chip);
+    });
+  };
+
+  clear.addEventListener("click", () => {
+    try { sessionStorage.removeItem(SEARCH_HISTORY_KEY); } catch (_) {}
+    render();
+  });
+
+  render();
 }
 
 function initRsvp() {
@@ -61,6 +414,8 @@ function initRsvp() {
   if (!form) return;
   const btn = document.getElementById("rsvpBtn");
   const cnt = document.getElementById("attendeeCount");
+  const spotsText = document.getElementById("spotsLeftText");
+  const spotsWrap = spotsText ? spotsText.parentElement : null;
   const msg = document.getElementById("rsvpMsg");
   const id = form.dataset.id;
 
@@ -73,13 +428,104 @@ function initRsvp() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "rsvp failed");
       cnt.textContent = data.count;
-      btn.textContent = data.status === "added" ? "Cancel RSVP" : "RSVP";
+
+      const userIsAttending = data.status === "added";
+      if (data.attendanceCap !== null && data.attendanceCap !== undefined && spotsText) {
+        if (data.isFull) {
+          spotsText.textContent = "Event is full";
+          spotsWrap.classList.add("is-full");
+        } else {
+          spotsText.textContent = data.spotsLeft + (data.spotsLeft === 1 ? " spot left" : " spots left");
+          spotsWrap.classList.remove("is-full");
+        }
+      }
+
+      if (userIsAttending) {
+        btn.textContent = "Cancel RSVP";
+        btn.disabled = false;
+        fireConfetti(btn);
+      } else if (data.isFull) {
+        btn.textContent = "Event Full";
+        btn.disabled = true;
+      } else {
+        btn.textContent = "RSVP";
+        btn.disabled = false;
+      }
     } catch (err) {
       msg.textContent = err.message;
-    } finally {
       btn.disabled = false;
     }
   });
+}
+
+function fireConfetti(originEl) {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "confetti-canvas";
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+
+  let originX = window.innerWidth / 2;
+  let originY = window.innerHeight / 3;
+  if (originEl) {
+    const r = originEl.getBoundingClientRect();
+    originX = r.left + r.width / 2;
+    originY = r.top + r.height / 2;
+  }
+
+  const colors = ["#e03131", "#f59f00", "#2f9e44", "#1c7ed6", "#ae3ec9", "#fab005"];
+  const particles = [];
+  for (let i = 0; i < 90; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 6 + Math.random() * 7;
+    particles.push({
+      x: originX,
+      y: originY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      size: 6 + Math.random() * 6,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1,
+    });
+  }
+
+  const gravity = 0.22;
+  const drag = 0.99;
+  const start = performance.now();
+
+  const tick = (now) => {
+    const elapsed = now - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach((p) => {
+      p.vx *= drag;
+      p.vy = p.vy * drag + gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.life = Math.max(0, 1 - elapsed / 1600);
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      ctx.restore();
+    });
+
+    if (elapsed < 1600) {
+      requestAnimationFrame(tick);
+    } else {
+      canvas.remove();
+    }
+  };
+  requestAnimationFrame(tick);
 }
 
 
@@ -340,6 +786,18 @@ function initCreateEventForm() {
       valid = false;
     }
 
+    const cap = document.getElementById("attendanceCap");
+    if (cap && cap.value.trim() !== "") {
+      const n = Number(cap.value);
+      if (!Number.isInteger(n) || n < 1) {
+        showError(cap, "Attendance cap must be a positive whole number.");
+        valid = false;
+      } else if (n > 100000) {
+        showError(cap, "Attendance cap is too large.");
+        valid = false;
+      }
+    }
+
     if (!valid) e.preventDefault();
   });
 }
@@ -432,6 +890,24 @@ function initEventDetailsForms() {
   document.querySelectorAll(".report-comment-btn").forEach(btn => {
     btn.addEventListener("click", () => reportComment(btn));
   });
+
+  document.querySelectorAll(".admin-flag-comment-btn").forEach(btn => {
+    btn.addEventListener("click", () => flagCommentAsAdmin(btn));
+  });
+}
+
+async function flagCommentAsAdmin(btn) {
+  if (!confirm("Flag this comment?")) return;
+  const eid = btn.dataset.eid;
+  const cid = btn.dataset.cid;
+  try {
+    const res = await fetch("/admin/events/" + eid + "/comments/" + cid + "/flag", { method: "POST" });
+    if (!res.ok) throw new Error("flag failed");
+    btn.textContent = "Flagged";
+    btn.disabled = true;
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function initSaveButtons() {
@@ -570,7 +1046,25 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
   body.textContent = c.text;
   wrap.appendChild(name);
   wrap.appendChild(body);
-  if (isLoggedIn) {
+  if (isAdmin) {
+    const flagBtn = document.createElement("button");
+    flagBtn.type = "button";
+    flagBtn.className = "report-btn compact-btn admin-flag-comment-btn";
+    flagBtn.dataset.cid = c._id;
+    flagBtn.dataset.eid = eid;
+    flagBtn.textContent = "Flag Comment";
+    flagBtn.addEventListener("click", () => flagCommentAsAdmin(flagBtn));
+    wrap.appendChild(flagBtn);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "danger-btn compact-btn delete-comment-btn";
+    removeBtn.dataset.cid = c._id;
+    removeBtn.dataset.eid = eid;
+    removeBtn.textContent = "Remove Comment";
+    removeBtn.addEventListener("click", () => deleteComment(removeBtn));
+    wrap.appendChild(removeBtn);
+  } else if (isLoggedIn) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "report-btn compact-btn report-comment-btn";
@@ -578,16 +1072,6 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
     btn.dataset.eid = eid;
     btn.textContent = "Report Comment";
     btn.addEventListener("click", () => reportComment(btn));
-    wrap.appendChild(btn);
-  }
-  if (isAdmin) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "danger-btn compact-btn delete-comment-btn";
-    btn.dataset.cid = c._id;
-    btn.dataset.eid = eid;
-    btn.textContent = "Remove Comment";
-    btn.addEventListener("click", () => deleteComment(btn));
     wrap.appendChild(btn);
   }
   return wrap;

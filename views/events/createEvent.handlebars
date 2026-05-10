@@ -90,6 +90,20 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label for="attendanceCap">Attendance Cap (optional)</label>
+        <input
+          id="attendanceCap"
+          name="attendanceCap"
+          type="number"
+          min="1"
+          max="100000"
+          step="1"
+          placeholder="Leave blank for unlimited"
+          value="{{form.attendanceCap}}"
+        >
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn-primary">Create Event</button>
       </div>

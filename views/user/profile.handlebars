@@ -5,6 +5,18 @@
       <h1>{{user.firstName}} {{user.lastName}}</h1>
       <p class="profile-subtitle">@{{user.handle}} • {{user.borough}}</p>
 
+      <div class="profile-badges">
+        <span class="profile-badge profile-badge-attended">
+          <strong>{{rsvpedEvents.length}}</strong> event{{#unless (eq rsvpedEvents.length 1)}}s{{/unless}} attending
+        </span>
+        <span class="profile-badge profile-badge-created">
+          <strong>{{createdEvents.length}}</strong> event{{#unless (eq createdEvents.length 1)}}s{{/unless}} created
+        </span>
+        <span class="profile-badge profile-badge-saved">
+          <strong>{{savedEvents.length}}</strong> saved
+        </span>
+      </div>
+
       <div class="profile-actions">
         <a href="/user/profile/edit" class="secondary-btn btn-link">Edit Profile</a>
 

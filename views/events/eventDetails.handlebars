@@ -32,18 +32,41 @@
       </div>
     </div>
 
-    <div class="event-side-panel">
+    <div class="event-side-panel"
+         data-event-id="{{event._id}}"
+         data-event-title="{{event.title}}"
+         data-event-location="{{#if event.locationText}}{{event.locationText}}{{else}}{{event.borough}}{{/if}}"
+         data-event-date="{{event.startDate}}"
+         data-event-start="{{event.startTime}}"
+         data-event-end="{{event.endTime}}"
+         data-event-description="{{event.description}}">
       <h2>Event Actions</h2>
 
-      <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span></p>
+      <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span>{{#if event.attendanceCap}} / {{event.attendanceCap}}{{/if}}</p>
+
+      {{#if event.attendanceCap}}
+        <p class="spots-left {{#if event.isFull}}is-full{{/if}}">
+          <span id="spotsLeftText">
+            {{#if event.isFull}}Event is full{{else}}{{event.spotsLeft}} spot{{#unless (eq event.spotsLeft 1)}}s{{/unless}} left{{/if}}
+          </span>
+        </p>
+      {{/if}}
 
       <p><strong>Average Rating:</strong> <span id="averageRating">{{#if event.averageRating}}{{event.averageRating}} / 5{{else}}No reviews{{/if}}</span></p>
+
+      <div class="form-actions">
+        <button type="button" id="shareBtn" class="secondary-btn detail-action share-btn">Share Event</button>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="calendarBtn" class="secondary-btn detail-action calendar-btn">Add to Calendar</button>
+      </div>
 
       {{#if isLoggedIn}}
         <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
           <div class="form-actions">
-            <button id="rsvpBtn" type="submit" class="btn-primary">
-              {{#if isAttending}}Cancel RSVP{{else}}RSVP{{/if}}
+            <button id="rsvpBtn" type="submit" class="btn-primary" {{#if event.isFull}}{{#unless isAttending}}disabled{{/unless}}{{/if}}>
+              {{#if isAttending}}Cancel RSVP{{else}}{{#if event.isFull}}Event Full{{else}}RSVP{{/if}}{{/if}}
             </button>
           </div>
           <p id="rsvpMsg" class="form-msg"></p>
@@ -107,12 +130,13 @@
           <p><strong>{{this.userName}}</strong></p>
           <p>{{this.text}}</p>
 
-          {{#if ../isLoggedIn}}
-            <button type="button" class="report-btn compact-btn report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
-          {{/if}}
-
           {{#if ../isAdmin}}
+            <button type="button" class="report-btn compact-btn admin-flag-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Flag Comment</button>
             <button type="button" class="danger-btn compact-btn delete-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Remove Comment</button>
+          {{else}}
+            {{#if ../isLoggedIn}}
+              <button type="button" class="report-btn compact-btn report-comment-btn" data-cid="{{this._id}}" data-eid="{{../event._id}}">Report Comment</button>
+            {{/if}}
           {{/if}}
         </div>
       {{/each}}
@@ -167,4 +191,15 @@
       <p id="reviewEmpty">No reviews yet.</p>
     {{/unless}}
   </div>
+
+  {{#if similarEvents.length}}
+    <div class="similar-events-card">
+      <h2>Similar Events</h2>
+      <div class="event-grid similar-events-grid">
+        {{#each similarEvents}}
+          {{> eventCard}}
+        {{/each}}
+      </div>
+    </div>
+  {{/if}}
 </div>

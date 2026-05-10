@@ -1,5 +1,5 @@
-<article class="event-card" data-id="{{_id}}">
-  <div class="event-image-wrap">
+<article class="event-card" data-id="{{_id}}" data-date="{{startDate}}" data-attendees="{{attendeeCount}}" data-rating="{{averageRating}}">
+  <div class="event-image-wrap loading">
     {{#if image}}
       <img
         src="{{image}}"
@@ -16,6 +16,11 @@
     {{/if}}
 
     <span class="badge">{{borough}}</span>
+    {{#if attendanceCap}}
+      <span class="cap-badge {{#if isFull}}is-full{{/if}}">
+        {{#if isFull}}Full{{else}}{{spotsLeft}} left{{/if}}
+      </span>
+    {{/if}}
   </div>
 
   <div class="event-card-body">
