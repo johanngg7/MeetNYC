@@ -89,6 +89,8 @@ router.get("/:id", async (req, res) => {
       const u = await userData.getById(uid);
       isSaved = (u.savedEvents || []).some((e) => e.toString() === req.params.id);
     }
+    const similarEvents = await eventData.getSimilar(req.params.id, 4);
+    const savedEventIds = await getSavedIds(req);
     res.render("events/eventDetails", {
       title: ev.title,
       event: ev,
@@ -96,6 +98,8 @@ router.get("/:id", async (req, res) => {
       isAttending,
       isSaved,
       attendeeCount: (ev.attendees || []).length,
+      similarEvents,
+      savedEventIds,
     });
   } catch (e) {
     res.status(404).render("error", {
@@ -187,13 +191,23 @@ router.post("/:id/rsvp", ensureAuthenticated, async (req, res) => {
     const ev = await eventData.getById(req.params.id);
     const uid = req.session.user._id;
     const attending = (ev.attendees || []).some((a) => a.userId.toString() === uid);
+    let status;
     if (attending) {
       await eventData.removeAttendee(req.params.id, uid);
-      return res.json({ status: "removed", count: (ev.attendees || []).length - 1 });
+      status = "removed";
+    } else {
+      const name = req.session.user.firstName + " " + req.session.user.lastName;
+      await eventData.addAttendee(req.params.id, uid, name);
+      status = "added";
     }
-    const name = req.session.user.firstName + " " + req.session.user.lastName;
-    await eventData.addAttendee(req.params.id, uid, name);
-    return res.json({ status: "added", count: (ev.attendees || []).length + 1 });
+    const after = await eventData.getById(req.params.id);
+    return res.json({
+      status,
+      count: after.attendeeCount,
+      spotsLeft: after.spotsLeft,
+      isFull: after.isFull,
+      attendanceCap: after.attendanceCap,
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

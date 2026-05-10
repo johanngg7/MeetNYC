@@ -414,6 +414,8 @@ function initRsvp() {
   if (!form) return;
   const btn = document.getElementById("rsvpBtn");
   const cnt = document.getElementById("attendeeCount");
+  const spotsText = document.getElementById("spotsLeftText");
+  const spotsWrap = spotsText ? spotsText.parentElement : null;
   const msg = document.getElementById("rsvpMsg");
   const id = form.dataset.id;
 
@@ -426,11 +428,31 @@ function initRsvp() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "rsvp failed");
       cnt.textContent = data.count;
-      btn.textContent = data.status === "added" ? "Cancel RSVP" : "RSVP";
-      if (data.status === "added") fireConfetti(btn);
+
+      const userIsAttending = data.status === "added";
+      if (data.attendanceCap !== null && data.attendanceCap !== undefined && spotsText) {
+        if (data.isFull) {
+          spotsText.textContent = "Event is full";
+          spotsWrap.classList.add("is-full");
+        } else {
+          spotsText.textContent = data.spotsLeft + (data.spotsLeft === 1 ? " spot left" : " spots left");
+          spotsWrap.classList.remove("is-full");
+        }
+      }
+
+      if (userIsAttending) {
+        btn.textContent = "Cancel RSVP";
+        btn.disabled = false;
+        fireConfetti(btn);
+      } else if (data.isFull) {
+        btn.textContent = "Event Full";
+        btn.disabled = true;
+      } else {
+        btn.textContent = "RSVP";
+        btn.disabled = false;
+      }
     } catch (err) {
       msg.textContent = err.message;
-    } finally {
       btn.disabled = false;
     }
   });
@@ -762,6 +784,18 @@ function initCreateEventForm() {
     } else if (startTime.value && endTime.value <= startTime.value) {
       showError(endTime, "End time must be after start time.");
       valid = false;
+    }
+
+    const cap = document.getElementById("attendanceCap");
+    if (cap && cap.value.trim() !== "") {
+      const n = Number(cap.value);
+      if (!Number.isInteger(n) || n < 1) {
+        showError(cap, "Attendance cap must be a positive whole number.");
+        valid = false;
+      } else if (n > 100000) {
+        showError(cap, "Attendance cap is too large.");
+        valid = false;
+      }
     }
 
     if (!valid) e.preventDefault();

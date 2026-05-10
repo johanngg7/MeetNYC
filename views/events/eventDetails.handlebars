@@ -42,7 +42,15 @@
          data-event-description="{{event.description}}">
       <h2>Event Actions</h2>
 
-      <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span></p>
+      <p><strong>Attending:</strong> <span id="attendeeCount">{{attendeeCount}}</span>{{#if event.attendanceCap}} / {{event.attendanceCap}}{{/if}}</p>
+
+      {{#if event.attendanceCap}}
+        <p class="spots-left {{#if event.isFull}}is-full{{/if}}">
+          <span id="spotsLeftText">
+            {{#if event.isFull}}Event is full{{else}}{{event.spotsLeft}} spot{{#unless (eq event.spotsLeft 1)}}s{{/unless}} left{{/if}}
+          </span>
+        </p>
+      {{/if}}
 
       <p><strong>Average Rating:</strong> <span id="averageRating">{{#if event.averageRating}}{{event.averageRating}} / 5{{else}}No reviews{{/if}}</span></p>
 
@@ -57,8 +65,8 @@
       {{#if isLoggedIn}}
         <form id="rsvpForm" action="/events/{{event._id}}/rsvp" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
           <div class="form-actions">
-            <button id="rsvpBtn" type="submit" class="btn-primary">
-              {{#if isAttending}}Cancel RSVP{{else}}RSVP{{/if}}
+            <button id="rsvpBtn" type="submit" class="btn-primary" {{#if event.isFull}}{{#unless isAttending}}disabled{{/unless}}{{/if}}>
+              {{#if isAttending}}Cancel RSVP{{else}}{{#if event.isFull}}Event Full{{else}}RSVP{{/if}}{{/if}}
             </button>
           </div>
           <p id="rsvpMsg" class="form-msg"></p>
@@ -183,4 +191,15 @@
       <p id="reviewEmpty">No reviews yet.</p>
     {{/unless}}
   </div>
+
+  {{#if similarEvents.length}}
+    <div class="similar-events-card">
+      <h2>Similar Events</h2>
+      <div class="event-grid similar-events-grid">
+        {{#each similarEvents}}
+          {{> eventCard}}
+        {{/each}}
+      </div>
+    </div>
+  {{/if}}
 </div>
