@@ -5,11 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{title}}</title>
   <link rel="stylesheet" href="/public/css/sitestyles.css" />
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("meetnyc-theme");
+        if (saved === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body data-is-admin="{{isAdmin}}" data-is-logged-in="{{isLoggedIn}}">
   {{> navbar}}
   {{{body}}}
   {{> footer}}
+  <a href="/events/random" id="discoverDice" class="discover-dice" title="Discover a random event" aria-label="Discover a random event" hidden>
+    <svg class="dice-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="2" y="2" width="20" height="20" rx="4" ry="4" class="dice-body"/>
+      <circle cx="7"  cy="7"  r="1.8" class="dice-pip"/>
+      <circle cx="17" cy="7"  r="1.8" class="dice-pip"/>
+      <circle cx="12" cy="12" r="1.8" class="dice-pip"/>
+      <circle cx="7"  cy="17" r="1.8" class="dice-pip"/>
+      <circle cx="17" cy="17" r="1.8" class="dice-pip"/>
+    </svg>
+  </a>
+  <button type="button" id="backToTop" class="back-to-top" aria-label="Back to top" hidden>&#8593;</button>
   <script src="/public/js/main.js"></script>
 </body>
 </html>

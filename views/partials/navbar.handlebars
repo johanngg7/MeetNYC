@@ -7,6 +7,9 @@
     <div class="nav-right">
       <a href="/events">Browse Events</a>
       <a href="/events/create">Create Event</a>
+      <button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <span class="theme-icon" aria-hidden="true">&#9788;</span>
+      </button>
 
       {{#if isLoggedIn}}
         <a href="/user/profile">Profile</a>
