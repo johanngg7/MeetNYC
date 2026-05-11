@@ -149,8 +149,9 @@
   <div class="event-reviews-card">
     <h2>Reviews</h2>
 
-    {{#if isLoggedIn}}
-      {{#unless hasOwnReview}}
+    {{#if eventEnded}}
+      {{#if isLoggedIn}}
+        {{#unless hasOwnReview}}
         <form id="reviewForm" action="/events/{{event._id}}/reviews" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
           <div class="form-group">
             <label for="rating">Rating</label>
@@ -174,7 +175,10 @@
           </div>
           <p id="reviewMsg" class="form-msg"></p>
         </form>
-      {{/unless}}
+        {{/unless}}
+      {{/if}}
+    {{else}}
+      <p class="empty-text">Reviews open after the event ends.</p>
     {{/if}}
 
     <div id="reviewList" class="review-list">

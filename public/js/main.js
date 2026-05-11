@@ -1088,6 +1088,23 @@ function initDashboard() {
     });
   });
 
+  document.querySelectorAll(".admin-toggle-admin").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      try {
+        const res = await fetch("/admin/users/" + id + "/toggle-admin", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "toggle failed");
+        const p = btn.closest(".admin-item").querySelector("p");
+        const role = data.isAdmin ? "Admin" : "User";
+        p.innerHTML = p.innerHTML.replace(/ — (Admin|User)$/, " — " + role);
+        btn.textContent = data.isAdmin ? "Revoke Admin" : "Make Admin";
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+
   document.querySelectorAll(".admin-unflag-comment").forEach(btn => {
     btn.addEventListener("click", async () => {
       const eid = btn.dataset.eventId;

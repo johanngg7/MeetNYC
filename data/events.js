@@ -532,6 +532,12 @@ const addReview = async (eventId, userId, userName, rating, text) => {
   const eOid = new ObjectId(eid);
   const uOid = new ObjectId(uid);
 
+  const ev = await col.findOne({ _id: eOid });
+  if (!ev) throw new Error("Event not found");
+
+  const endDt = new Date(ev.endDate + "T" + ev.endTime + ":00");
+  if (endDt > new Date()) throw new Error("Reviews can only be submitted after the event has ended");
+
   const review = {
     _id: new ObjectId(),
     userId: uOid,

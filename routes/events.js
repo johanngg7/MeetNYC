@@ -99,12 +99,14 @@ router.get("/:id", async (req, res) => {
         return { ...r, isOwn: own };
       });
     }
+    const eventEnded = new Date(ev.endDate + "T" + ev.endTime + ":00") <= new Date();
     res.render("events/eventDetails", {
       title: ev.title,
       event: ev,
       isOwner,
       isAttending,
       isSaved,
+      eventEnded,
       attendeeCount: (ev.attendees || []).length,
       similarEvents,
       savedEventIds,

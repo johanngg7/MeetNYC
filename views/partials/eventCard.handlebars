@@ -41,7 +41,7 @@
         <a href="{{mapUrl}}" target="_blank" rel="noopener" class="secondary-btn">Map</a>
       {{/if}}
 
-      {{#if ../isLoggedIn}}
+      {{#if @root.isLoggedIn}}
         {{#if (hasId ../savedEventIds _id)}}
           <button class="secondary-btn save-btn saved" type="button" data-id="{{_id}}">
             Unsave Event

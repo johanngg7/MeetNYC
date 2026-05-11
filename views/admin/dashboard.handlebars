@@ -44,4 +44,26 @@
     {{/if}}
   </div>
 
+  <div class="details-content-card">
+    <h2>Users</h2>
+
+    {{#if users.length}}
+      {{#each users}}
+        <div class="admin-item" data-user-id="{{_id}}">
+          <p><strong>{{firstName}} {{lastName}}</strong> — @{{handle}} — {{email}} — {{#if isAdmin}}Admin{{else}}User{{/if}}</p>
+
+          {{#unless isSelf}}
+            <div class="admin-actions">
+              <button class="secondary-btn admin-toggle-admin" data-id="{{_id}}">
+                {{#if isAdmin}}Revoke Admin{{else}}Make Admin{{/if}}
+              </button>
+            </div>
+          {{/unless}}
+        </div>
+      {{/each}}
+    {{else}}
+      <p class="empty-text">No users found</p>
+    {{/if}}
+  </div>
+
 </section>
