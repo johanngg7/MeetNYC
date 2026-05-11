@@ -94,11 +94,7 @@ router.post("/profile/delete", ensureAuthenticated, async (req, res) => {
         await eventData.remove(eid.toString(), uid);
       } catch (e) {}
     }
-    for (const eid of u.rsvpedEvents || []) {
-      try {
-        await eventData.removeAttendee(eid.toString(), uid);
-      } catch (e) {}
-    }
+    await eventData.purgeUserContent(uid);
     await userData.remove(uid);
     req.session.destroy(() => {
       res.redirect("/");
