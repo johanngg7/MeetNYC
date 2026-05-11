@@ -251,11 +251,43 @@ const seedPermitted = async (userId) => {
 
 const { ObjectId } = require("mongodb");
 
+const seedDemoEvent = async (demoId) => {
+  const evCol = await events();
+  const today = new Date();
+  const future = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const startDate = ymd(future);
+  const doc = {
+    title: "Brooklyn Pickup Soccer Game",
+    description: "Friendly pickup soccer at Prospect Park. All skill levels welcome.",
+    category: "Sport",
+    borough: "Brooklyn",
+    venueName: "Prospect Park - Long Meadow",
+    venueId: null,
+    location: "Prospect Park - Long Meadow",
+    startDate,
+    endDate: startDate,
+    startTime: "14:00",
+    endTime: "16:00",
+    isPermitted: false,
+    isFlagged: false,
+    createdBy: demoId,
+    creator: "Demo User",
+    photos: [],
+    comments: [],
+    reviews: [],
+    attendees: [],
+    attendanceCap: 12,
+    createdAt: new Date(),
+  };
+  const r = await evCol.insertOne(doc);
+  return r.insertedId;
+};
+
 const seedDemoActivity = async (demoId) => {
   const evCol = await events();
   const userCol = await users();
 
-  const sample = await evCol.find({}).limit(6).toArray();
+  const sample = await evCol.find({ createdBy: { $ne: demoId } }).limit(6).toArray();
   if (sample.length === 0) return;
 
   const rsvpEvents = sample.slice(0, 3);
@@ -265,6 +297,8 @@ const seedDemoActivity = async (demoId) => {
 
   const demo = await userCol.findOne({ _id: demoId });
   const userName = demo.firstName + " " + demo.lastName;
+
+  const demoEventId = await seedDemoEvent(demoId);
 
   const rsvpedIds = [];
   for (const ev of rsvpEvents) {
@@ -286,7 +320,7 @@ const seedDemoActivity = async (demoId) => {
 
   await userCol.updateOne(
     { _id: demoId },
-    { $set: { rsvpedEvents: rsvpedIds, savedEvents: savedIds, createdEvents: [] } }
+    { $set: { rsvpedEvents: rsvpedIds, savedEvents: savedIds, createdEvents: [demoEventId] } }
   );
 
   if (commentEvent) {

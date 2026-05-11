@@ -63,7 +63,8 @@ const isId = (s) => {
   return t;
 };
 
-const clean = (s) => xss(s);
+const cleanOpts = { whiteList: {}, stripIgnoreTag: true, stripIgnoreTagBody: ["script", "style"] };
+const clean = (s) => xss(s, cleanOpts);
 
 const isLen = (s, name, min, max) => {
   const t = isStr(s, name);
