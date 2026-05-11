@@ -150,40 +150,49 @@
     <h2>Reviews</h2>
 
     {{#if isLoggedIn}}
-      <form id="reviewForm" action="/events/{{event._id}}/reviews" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
-        <div class="form-group">
-          <label for="rating">Rating</label>
-          <select id="rating" name="rating" required>
-            <option value="">Select rating</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </div>
+      {{#unless hasOwnReview}}
+        <form id="reviewForm" action="/events/{{event._id}}/reviews" method="POST" class="event-form" data-id="{{event._id}}" novalidate>
+          <div class="form-group">
+            <label for="rating">Rating</label>
+            <select id="rating" name="rating" required>
+              <option value="">Select rating</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label for="review">Review</label>
-          <textarea id="review" name="review" rows="4" placeholder="Write your review here..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="review">Review</label>
+            <textarea id="review" name="review" rows="4" placeholder="Write your review here..."></textarea>
+          </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn-primary">Submit Review</button>
-        </div>
-        <p id="reviewMsg" class="form-msg"></p>
-      </form>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Submit Review</button>
+          </div>
+          <p id="reviewMsg" class="form-msg"></p>
+        </form>
+      {{/unless}}
     {{/if}}
 
     <div id="reviewList" class="review-list">
       {{#each event.reviews}}
         <div class="review-card" data-id="{{this._id}}">
-          <p><strong>{{this.userName}}</strong> - {{this.rating}}/5</p>
-          <p>{{this.text}}</p>
+          <div class="review-display">
+            <p><strong>{{this.userName}}</strong> - <span class="review-rating">{{this.rating}}</span>/5{{#if this.editedAt}} <span class="review-edited">(edited)</span>{{/if}}</p>
+            <p class="review-text">{{this.text}}</p>
 
-          {{#if ../isAdmin}}
-            <button type="button" class="danger-btn compact-btn delete-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Remove Review</button>
-          {{/if}}
+            {{#if this.isOwn}}
+              <button type="button" class="secondary-btn compact-btn edit-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Edit Review</button>
+              <button type="button" class="danger-btn compact-btn delete-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Remove Review</button>
+            {{else}}
+              {{#if ../isAdmin}}
+                <button type="button" class="danger-btn compact-btn delete-review-btn" data-rid="{{this._id}}" data-eid="{{../event._id}}">Remove Review</button>
+              {{/if}}
+            {{/if}}
+          </div>
         </div>
       {{/each}}
     </div>

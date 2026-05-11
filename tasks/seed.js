@@ -40,6 +40,23 @@ const ADMIN_USER = {
   createdAt: new Date(),
 };
 
+const DEMO_PASSWORD = "DemoPass1!";
+
+const DEMO_USER = {
+  firstName: "Demo",
+  lastName: "User",
+  email: "demo@meetnyc.local",
+  handle: "demo",
+  borough: "Brooklyn",
+  profilePicture: "",
+  isAdmin: false,
+  isVerified: false,
+  createdEvents: [],
+  rsvpedEvents: [],
+  savedEvents: [],
+  createdAt: new Date(),
+};
+
 const boros = {
   manhattan: "Manhattan",
   brooklyn: "Brooklyn",
@@ -97,6 +114,21 @@ const ensureAdminUser = async () => {
     return ex._id;
   }
   const r = await col.insertOne({ ...ADMIN_USER, hashedPassword: hash });
+  return r.insertedId;
+};
+
+const ensureDemoUser = async () => {
+  const col = await users();
+  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const ex = await col.findOne({ handle: DEMO_USER.handle });
+  if (ex) {
+    await col.updateOne(
+      { _id: ex._id },
+      { $set: { ...DEMO_USER, hashedPassword: hash } }
+    );
+    return ex._id;
+  }
+  const r = await col.insertOne({ ...DEMO_USER, hashedPassword: hash });
   return r.insertedId;
 };
 
@@ -217,6 +249,83 @@ const seedPermitted = async (userId) => {
   return count;
 };
 
+const { ObjectId } = require("mongodb");
+
+const seedDemoActivity = async (demoId) => {
+  const evCol = await events();
+  const userCol = await users();
+
+  const sample = await evCol.find({}).limit(6).toArray();
+  if (sample.length === 0) return;
+
+  const rsvpEvents = sample.slice(0, 3);
+  const savedEvents = sample.slice(3, 5);
+  const commentEvent = sample[0];
+  const reviewEvent = sample[1];
+
+  const demo = await userCol.findOne({ _id: demoId });
+  const userName = demo.firstName + " " + demo.lastName;
+
+  const rsvpedIds = [];
+  for (const ev of rsvpEvents) {
+    const att = {
+      _id: new ObjectId(),
+      userId: demoId,
+      userName,
+      status: "going",
+      rsvpedAt: new Date(),
+    };
+    await evCol.updateOne(
+      { _id: ev._id, "attendees.userId": { $ne: demoId } },
+      { $push: { attendees: att } }
+    );
+    rsvpedIds.push(ev._id);
+  }
+
+  const savedIds = savedEvents.map((e) => e._id);
+
+  await userCol.updateOne(
+    { _id: demoId },
+    { $set: { rsvpedEvents: rsvpedIds, savedEvents: savedIds, createdEvents: [] } }
+  );
+
+  if (commentEvent) {
+    await evCol.updateOne(
+      { _id: commentEvent._id },
+      {
+        $push: {
+          comments: {
+            _id: new ObjectId(),
+            userId: demoId,
+            userName,
+            text: "Looking forward to this one — anyone want to meet up beforehand?",
+            isFlagged: false,
+            postedAt: new Date(),
+          },
+        },
+      }
+    );
+  }
+
+  if (reviewEvent) {
+    await evCol.updateOne(
+      { _id: reviewEvent._id, "reviews.userId": { $ne: demoId } },
+      {
+        $push: {
+          reviews: {
+            _id: new ObjectId(),
+            userId: demoId,
+            userName,
+            rating: 4,
+            text: "Solid event, well organized. Would attend again.",
+            postedAt: new Date(),
+          },
+        },
+      }
+    );
+  }
+};
+
 const seed = async () => {
   await dbConnection();
   console.log("Seeding...");
@@ -233,11 +342,17 @@ const seed = async () => {
   await ensureAdminUser();
   console.log("admin user ready");
 
+  const demoId = await ensureDemoUser();
+  console.log("demo user ready");
+
   const a = await seedParks(userId);
   console.log("parks events seeded:", a);
 
   const b = await seedPermitted(userId);
   console.log("permitted events seeded:", b);
+
+  await seedDemoActivity(demoId);
+  console.log("demo activity seeded");
 
   console.log("Done seeding. Total:", a + b);
   await closeConnection();

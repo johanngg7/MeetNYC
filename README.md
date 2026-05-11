@@ -37,7 +37,14 @@ Email: admin@meetnyc.local
 Password: AdminPass1!
 ```
 
-Regular users can be created from the register page.
+Regular user:
+
+```text
+Email: demo@meetnyc.local
+Password: DemoPass1!
+```
+
+Additional regular users can be created from the register page.
 
 ## Datasets
 

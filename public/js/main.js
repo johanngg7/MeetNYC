@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   injectErrorStyles();
   initRegisterForm();
   initLoginForm();
+  initEditProfileForm();
   initCreateEventForm();
   initEventDetailsForms();
   initSaveButtons();
@@ -14,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRsvp();
   initComments();
   initReviews();
+  initReviewActions();
   initBackToTop();
   initShare();
   initImageSkeletons();
@@ -699,8 +701,111 @@ function initLoginForm() {
 }
 
 
+function initEditProfileForm() {
+  const form = document.getElementById("profile-edit-form");
+  if (!form) return;
+
+  const handle          = document.getElementById("handle");
+  const firstName       = document.getElementById("firstName");
+  const lastName        = document.getElementById("lastName");
+  const email           = document.getElementById("email");
+  const borough         = document.getElementById("borough");
+  const password        = document.getElementById("password");
+  const confirmPassword = document.getElementById("confirmPassword");
+
+  [handle, firstName, lastName, email, password, confirmPassword].forEach(el => {
+    el && el.addEventListener("input", () => clearError(el));
+  });
+  if (borough) borough.addEventListener("change", () => clearSelectError(borough));
+
+  form.addEventListener("submit", e => {
+    let valid = true;
+
+    if (!handle.value.trim()) {
+      showError(handle, "Handle is required.");
+      valid = false;
+    } else if (!/^[a-zA-Z0-9_]{3,20}$/.test(handle.value.trim())) {
+      showError(handle, "Handle must be 3-20 characters (letters, numbers, underscores).");
+      valid = false;
+    }
+
+    if (!firstName.value.trim()) {
+      showError(firstName, "First name is required.");
+      valid = false;
+    } else if (firstName.value.trim().length < 2) {
+      showError(firstName, "First name must be at least 2 characters.");
+      valid = false;
+    } else if (!/^[a-zA-Z]+$/.test(firstName.value.trim())) {
+      showError(firstName, "First name must be letters only.");
+      valid = false;
+    }
+
+    if (!lastName.value.trim()) {
+      showError(lastName, "Last name is required.");
+      valid = false;
+    } else if (lastName.value.trim().length < 2) {
+      showError(lastName, "Last name must be at least 2 characters.");
+      valid = false;
+    } else if (!/^[a-zA-Z]+$/.test(lastName.value.trim())) {
+      showError(lastName, "Last name must be letters only.");
+      valid = false;
+    }
+
+    if (!email.value.trim()) {
+      showError(email, "Email is required.");
+      valid = false;
+    } else if (!isValidEmail(email.value)) {
+      showError(email, "Please enter a valid email address.");
+      valid = false;
+    }
+
+    if (borough && !borough.value) {
+      showSelectError(borough, "Please select a borough.");
+      valid = false;
+    }
+
+    const pwVal = password ? password.value : "";
+    const cpVal = confirmPassword ? confirmPassword.value : "";
+
+    if (pwVal || cpVal) {
+      if (!pwVal) {
+        showError(password, "New password is required to change it.");
+        valid = false;
+      } else if (pwVal.length < 8) {
+        showError(password, "Password must be at least 8 characters.");
+        valid = false;
+      } else if (!/[A-Z]/.test(pwVal)) {
+        showError(password, "Password must contain at least one uppercase letter.");
+        valid = false;
+      } else if (!/[0-9]/.test(pwVal)) {
+        showError(password, "Password must contain at least one number.");
+        valid = false;
+      } else if (!/[^a-zA-Z0-9]/.test(pwVal)) {
+        showError(password, "Password must have a special character.");
+        valid = false;
+      } else if (/\s/.test(pwVal)) {
+        showError(password, "Password cannot have spaces.");
+        valid = false;
+      }
+
+      if (!cpVal) {
+        showError(confirmPassword, "Please confirm your new password.");
+        valid = false;
+      } else if (pwVal !== cpVal) {
+        showError(confirmPassword, "Passwords do not match.");
+        valid = false;
+      }
+    }
+
+    if (!valid) e.preventDefault();
+  });
+}
+
+
 function initCreateEventForm() {
-  const form = document.querySelector('form[action="/events/create"]');
+  const form =
+    document.querySelector('form[action="/events/create"]') ||
+    document.querySelector('form[action^="/events/"][action$="/edit"]');
   if (!form) return;
 
   const title       = document.getElementById("title");
@@ -721,8 +826,9 @@ function initCreateEventForm() {
     });
   }
 
+  const isCreate = form.getAttribute("action") === "/events/create";
   if (date) {
-    date.min = new Date().toISOString().split("T")[0];
+    if (isCreate) date.min = new Date().toISOString().split("T")[0];
     date.addEventListener("change", () => clearError(date));
   }
 
@@ -764,7 +870,7 @@ function initCreateEventForm() {
     if (!date.value) {
       showError(date, "Date is required.");
       valid = false;
-    } else {
+    } else if (isCreate) {
       const chosen = new Date(date.value + "T00:00:00");
       const today  = new Date(); today.setHours(0, 0, 0, 0);
       if (chosen < today) {
@@ -1077,20 +1183,51 @@ function buildCommentNode(c, eid, isAdmin, isLoggedIn) {
   return wrap;
 }
 
-function buildReviewNode(r, eid, isAdmin) {
+function buildReviewNode(r, eid, isAdmin, isOwn) {
   const wrap = document.createElement("div");
   wrap.className = "review-card";
   wrap.dataset.id = r._id;
+
+  const display = document.createElement("div");
+  display.className = "review-display";
+
   const head = document.createElement("p");
   const strong = document.createElement("strong");
   strong.textContent = r.userName;
   head.appendChild(strong);
-  head.appendChild(document.createTextNode(" - " + r.rating + "/5"));
+  head.appendChild(document.createTextNode(" - "));
+  const ratingSpan = document.createElement("span");
+  ratingSpan.className = "review-rating";
+  ratingSpan.textContent = String(r.rating);
+  head.appendChild(ratingSpan);
+  head.appendChild(document.createTextNode("/5"));
+
   const body = document.createElement("p");
+  body.className = "review-text";
   body.textContent = r.text;
-  wrap.appendChild(head);
-  wrap.appendChild(body);
-  if (isAdmin) {
+
+  display.appendChild(head);
+  display.appendChild(body);
+
+  if (isOwn) {
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "secondary-btn compact-btn edit-review-btn";
+    editBtn.dataset.rid = r._id;
+    editBtn.dataset.eid = eid;
+    editBtn.textContent = "Edit Review";
+    editBtn.addEventListener("click", () => startEditReview(editBtn));
+    display.appendChild(editBtn);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "danger-btn compact-btn delete-review-btn";
+    removeBtn.dataset.rid = r._id;
+    removeBtn.dataset.eid = eid;
+    removeBtn.textContent = "Remove Review";
+    removeBtn.addEventListener("click", () => deleteReview(removeBtn));
+    display.appendChild(removeBtn);
+  } else if (isAdmin) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "danger-btn compact-btn delete-review-btn";
@@ -1098,8 +1235,10 @@ function buildReviewNode(r, eid, isAdmin) {
     btn.dataset.eid = eid;
     btn.textContent = "Remove Review";
     btn.addEventListener("click", () => deleteReview(btn));
-    wrap.appendChild(btn);
+    display.appendChild(btn);
   }
+
+  wrap.appendChild(display);
   return wrap;
 }
 
@@ -1122,15 +1261,28 @@ async function deleteReview(btn) {
   if (!confirm("Remove this review?")) return;
   const eid = btn.dataset.eid;
   const rid = btn.dataset.rid;
+  const card = document.querySelector('.review-card[data-id="' + rid + '"]');
+  const wasOwn = !!(card && card.querySelector(".edit-review-btn"));
   try {
     const res = await fetch("/events/" + eid + "/reviews/" + rid + "/delete", { method: "POST" });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "delete failed");
-    const card = document.querySelector('.review-card[data-id="' + rid + '"]');
     if (card) card.remove();
     const avg = document.getElementById("averageRating");
     if (avg) {
       avg.textContent = data.averageRating ? data.averageRating + " / 5" : "No reviews";
+    }
+    if (wasOwn) {
+      const form = document.getElementById("reviewForm");
+      if (form) {
+        form.style.display = "";
+        const ratingSel = document.getElementById("rating");
+        const reviewTa = document.getElementById("review");
+        if (ratingSel) ratingSel.value = "";
+        if (reviewTa) reviewTa.value = "";
+      } else {
+        window.location.reload();
+      }
     }
   } catch (err) {
     alert(err.message);
@@ -1174,6 +1326,140 @@ function initComments() {
   });
 }
 
+function initReviewActions() {
+  document.querySelectorAll(".edit-review-btn").forEach((b) => {
+    b.addEventListener("click", () => startEditReview(b));
+  });
+  document.querySelectorAll(".delete-review-btn").forEach((b) => {
+    b.addEventListener("click", () => deleteReview(b));
+  });
+}
+
+function startEditReview(btn) {
+  const card = btn.closest(".review-card");
+  if (!card) return;
+  const display = card.querySelector(".review-display");
+  if (!display) return;
+  if (card.querySelector(".review-edit-form")) return;
+
+  const eid = btn.dataset.eid;
+  const rid = btn.dataset.rid;
+  const ratingEl = card.querySelector(".review-rating");
+  const textEl = card.querySelector(".review-text");
+  const currentRating = ratingEl ? ratingEl.textContent.trim() : "";
+  const currentText = textEl ? textEl.textContent : "";
+
+  display.style.display = "none";
+
+  const formWrap = document.createElement("div");
+  formWrap.className = "review-edit-form";
+
+  const ratingGroup = document.createElement("div");
+  ratingGroup.className = "form-group";
+  const ratingLabel = document.createElement("label");
+  ratingLabel.textContent = "Rating";
+  const ratingId = "editRating-" + rid;
+  ratingLabel.setAttribute("for", ratingId);
+  const ratingSelect = document.createElement("select");
+  ratingSelect.id = ratingId;
+  ratingSelect.required = true;
+  for (let i = 1; i <= 5; i++) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    opt.textContent = String(i);
+    if (String(i) === currentRating) opt.selected = true;
+    ratingSelect.appendChild(opt);
+  }
+  ratingGroup.appendChild(ratingLabel);
+  ratingGroup.appendChild(ratingSelect);
+
+  const textGroup = document.createElement("div");
+  textGroup.className = "form-group";
+  const textLabel = document.createElement("label");
+  textLabel.textContent = "Review";
+  const textId = "editReview-" + rid;
+  textLabel.setAttribute("for", textId);
+  const textArea = document.createElement("textarea");
+  textArea.id = textId;
+  textArea.rows = 4;
+  textArea.maxLength = 500;
+  textArea.value = currentText;
+  textGroup.appendChild(textLabel);
+  textGroup.appendChild(textArea);
+
+  const actions = document.createElement("div");
+  actions.className = "form-actions review-edit-actions";
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.className = "primary-btn compact-btn";
+  saveBtn.textContent = "Save";
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "secondary-btn compact-btn";
+  cancelBtn.textContent = "Cancel";
+  actions.appendChild(saveBtn);
+  actions.appendChild(cancelBtn);
+
+  const errMsg = document.createElement("p");
+  errMsg.className = "form-msg field-error";
+
+  formWrap.appendChild(ratingGroup);
+  formWrap.appendChild(textGroup);
+  formWrap.appendChild(actions);
+  formWrap.appendChild(errMsg);
+  card.appendChild(formWrap);
+
+  cancelBtn.addEventListener("click", () => {
+    formWrap.remove();
+    display.style.display = "";
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    errMsg.textContent = "";
+    const rVal = ratingSelect.value;
+    const tVal = textArea.value;
+    if (!rVal) { errMsg.textContent = "Please select a rating."; return; }
+    if (!tVal.trim()) { errMsg.textContent = "Review cannot be empty."; return; }
+    if (tVal.trim().length < 10) { errMsg.textContent = "Review must be at least 10 characters."; return; }
+    if (tVal.length > 500) { errMsg.textContent = "Review cannot exceed 500 characters."; return; }
+
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+    try {
+      const body = "rating=" + encodeURIComponent(rVal) + "&review=" + encodeURIComponent(tVal);
+      const res = await fetch("/events/" + eid + "/reviews/" + rid + "/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "edit failed");
+
+      if (ratingEl) ratingEl.textContent = String(data.review.rating);
+      if (textEl) textEl.textContent = data.review.text;
+
+      const headerP = display.querySelector("p:first-child");
+      if (headerP && !headerP.querySelector(".review-edited")) {
+        const editedTag = document.createElement("span");
+        editedTag.className = "review-edited";
+        editedTag.textContent = "(edited)";
+        headerP.appendChild(document.createTextNode(" "));
+        headerP.appendChild(editedTag);
+      }
+
+      const avg = document.getElementById("averageRating");
+      if (avg && data.averageRating) avg.textContent = data.averageRating + " / 5";
+
+      formWrap.remove();
+      display.style.display = "";
+    } catch (err) {
+      errMsg.textContent = err.message;
+      saveBtn.disabled = false;
+      cancelBtn.disabled = false;
+    }
+  });
+}
+
 function initReviews() {
   const form = document.getElementById("reviewForm");
   if (!form) return;
@@ -1183,10 +1469,6 @@ function initReviews() {
   const msg = document.getElementById("reviewMsg");
   const avg = document.getElementById("averageRating");
   const eid = form.dataset.id;
-
-  document.querySelectorAll(".delete-review-btn").forEach((b) => {
-    b.addEventListener("click", () => deleteReview(b));
-  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1204,11 +1486,12 @@ function initReviews() {
       const empty = document.getElementById("reviewEmpty");
       if (empty) empty.remove();
       const isAdmin = document.body.dataset.isAdmin === "true";
-      const node = buildReviewNode(data.review, eid, isAdmin);
+      const node = buildReviewNode(data.review, eid, isAdmin, true);
       list.prepend(node);
       rating.value = "";
       ta.value = "";
       if (avg) avg.textContent = data.averageRating + " / 5";
+      form.style.display = "none";
     } catch (err) {
       msg.textContent = err.message;
     }

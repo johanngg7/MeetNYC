@@ -91,6 +91,14 @@ router.get("/:id", async (req, res) => {
     }
     const similarEvents = await eventData.getSimilar(req.params.id, 4);
     const savedEventIds = await getSavedIds(req);
+    let hasOwnReview = false;
+    if (uid && Array.isArray(ev.reviews)) {
+      ev.reviews = ev.reviews.map((r) => {
+        const own = r.userId && r.userId.toString() === uid;
+        if (own) hasOwnReview = true;
+        return { ...r, isOwn: own };
+      });
+    }
     res.render("events/eventDetails", {
       title: ev.title,
       event: ev,
@@ -100,6 +108,7 @@ router.get("/:id", async (req, res) => {
       attendeeCount: (ev.attendees || []).length,
       similarEvents,
       savedEventIds,
+      hasOwnReview,
     });
   } catch (e) {
     res.status(404).render("error", {
@@ -141,7 +150,7 @@ router.post("/:id/edit", ensureAuthenticated, async (req, res) => {
   } catch (e) {
     res.status(400).render("events/editEvent", {
       title: "Edit Event",
-      event: { _id: req.params.id, ...req.body },
+      event: { _id: req.params.id, ...req.body, startDate: req.body.date },
       error: e.message,
     });
   }
@@ -258,6 +267,29 @@ router.post("/:id/reviews", ensureAuthenticated, async (req, res) => {
       req.params.id,
       req.session.user._id,
       name,
+      req.body.rating,
+      req.body.review
+    );
+    res.json({
+      review: {
+        ...out.review,
+        _id: out.review._id.toString(),
+        userId: out.review.userId.toString(),
+      },
+      averageRating: out.averageRating,
+      count: out.count,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.post("/:id/reviews/:rid/edit", ensureAuthenticated, async (req, res) => {
+  try {
+    const out = await eventData.updateReview(
+      req.params.id,
+      req.params.rid,
+      req.session.user._id,
       req.body.rating,
       req.body.review
     );

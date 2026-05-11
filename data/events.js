@@ -383,6 +383,23 @@ const update = async (id, userId, input) => {
   return await col.findOne({ _id: new ObjectId(ok) });
 };
 
+const purgeUserContent = async (userId) => {
+  const uid = v.isId(userId);
+  const oid = new ObjectId(uid);
+  const col = await events();
+  await col.updateMany(
+    {},
+    {
+      $pull: {
+        attendees: { userId: oid },
+        comments: { userId: oid },
+        reviews: { userId: oid },
+      },
+    }
+  );
+  return true;
+};
+
 const remove = async (id, userId) => {
   const ok = v.isId(id);
   const uid = v.isId(userId);
@@ -405,27 +422,39 @@ const addAttendee = async (eventId, userId, userName) => {
   const name = v.isStr(userName, "userName");
 
   const col = await events();
-  const ev = await col.findOne({ _id: new ObjectId(eid) });
-  if (!ev) throw new Error("Event not found");
-
-  const already = (ev.attendees || []).some((a) => a.userId.toString() === uid);
-  if (already) throw new Error("Already attending");
-
-  if (typeof ev.attendanceCap === "number" && ev.attendanceCap > 0 && (ev.attendees || []).length >= ev.attendanceCap) {
-    throw new Error("Event is full");
-  }
+  const eOid = new ObjectId(eid);
+  const uOid = new ObjectId(uid);
 
   const att = {
     _id: new ObjectId(),
-    userId: new ObjectId(uid),
+    userId: uOid,
     userName: v.clean(name),
     status: "going",
     rsvpedAt: new Date(),
   };
-  await col.updateOne(
-    { _id: new ObjectId(eid) },
-    { $push: { attendees: att } }
-  );
+
+  const filter = {
+    _id: eOid,
+    "attendees.userId": { $ne: uOid },
+    $expr: {
+      $or: [
+        { $eq: [{ $type: "$attendanceCap" }, "missing"] },
+        { $eq: ["$attendanceCap", null] },
+        { $lte: ["$attendanceCap", 0] },
+        { $lt: [{ $size: { $ifNull: ["$attendees", []] } }, "$attendanceCap"] },
+      ],
+    },
+  };
+
+  const r = await col.updateOne(filter, { $push: { attendees: att } });
+  if (r.modifiedCount === 0) {
+    const ev = await col.findOne({ _id: eOid });
+    if (!ev) throw new Error("Event not found");
+    const already = (ev.attendees || []).some((a) => a.userId.toString() === uid);
+    if (already) throw new Error("Already attending");
+    throw new Error("Event is full");
+  }
+
   await userData.addEventTo(uid, "rsvpedEvents", eid);
   return att;
 };
@@ -500,31 +529,70 @@ const addReview = async (eventId, userId, userName, rating, text) => {
   }
 
   const col = await events();
-  const ev = await col.findOne({ _id: new ObjectId(eid) });
-  if (!ev) throw new Error("Event not found");
-
-  const exists = (ev.reviews || []).some((rv) => rv.userId.toString() === uid);
-  if (exists) throw new Error("You already reviewed this event");
+  const eOid = new ObjectId(eid);
+  const uOid = new ObjectId(uid);
 
   const review = {
     _id: new ObjectId(),
-    userId: new ObjectId(uid),
+    userId: uOid,
     userName: v.clean(name),
     rating: r,
     text: v.clean(cleanText),
     postedAt: new Date(),
   };
-  await col.updateOne(
-    { _id: new ObjectId(eid) },
+
+  const result = await col.updateOne(
+    { _id: eOid, "reviews.userId": { $ne: uOid } },
     { $push: { reviews: review } }
   );
+  if (result.modifiedCount === 0) {
+    const ev = await col.findOne({ _id: eOid });
+    if (!ev) throw new Error("Event not found");
+    throw new Error("You already reviewed this event");
+  }
 
-  const after = await col.findOne({ _id: new ObjectId(eid) });
+  const after = await col.findOne({ _id: eOid });
   let sum = 0;
   for (const x of after.reviews) sum += Number(x.rating) || 0;
   const avg = (sum / after.reviews.length).toFixed(1);
 
   return { review, averageRating: avg, count: after.reviews.length };
+};
+
+const updateReview = async (eventId, reviewId, userId, rating, text) => {
+  const eid = v.isId(eventId);
+  const rid = v.isId(reviewId);
+  const uid = v.isId(userId);
+
+  const r = parseInt(rating, 10);
+  if (isNaN(r) || r < 1 || r > 5) throw new Error("Rating must be 1-5");
+
+  let cleanText = "";
+  if (text && typeof text === "string" && text.trim()) {
+    cleanText = v.isLen(text, "review", 10, 500);
+  }
+
+  const col = await events();
+  const ev = await col.findOne({ _id: new ObjectId(eid) });
+  if (!ev) throw new Error("Event not found");
+
+  const rv = (ev.reviews || []).find((x) => x._id.toString() === rid);
+  if (!rv) throw new Error("Review not found");
+  if (rv.userId.toString() !== uid) throw new Error("Not your review");
+
+  const result = await col.updateOne(
+    { _id: new ObjectId(eid), "reviews._id": new ObjectId(rid) },
+    { $set: { "reviews.$.rating": r, "reviews.$.text": v.clean(cleanText), "reviews.$.editedAt": new Date() } }
+  );
+  if (result.matchedCount === 0) throw new Error("Review not found");
+
+  const after = await col.findOne({ _id: new ObjectId(eid) });
+  const updated = (after.reviews || []).find((x) => x._id.toString() === rid);
+  let sum = 0;
+  for (const x of after.reviews) sum += Number(x.rating) || 0;
+  const avg = (sum / after.reviews.length).toFixed(1);
+
+  return { review: updated, averageRating: avg, count: after.reviews.length };
 };
 
 const removeReview = async (eventId, reviewId, userId, isAdmin) => {
@@ -644,11 +712,13 @@ module.exports = {
   search,
   update,
   remove,
+  purgeUserContent,
   addAttendee,
   removeAttendee,
   addComment,
   removeComment,
   addReview,
+  updateReview,
   removeReview,
   flagEvent,
   unflagEvent,
